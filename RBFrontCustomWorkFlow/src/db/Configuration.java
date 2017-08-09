@@ -102,7 +102,7 @@ public class Configuration {
 //			data.put("Type", "DEV");
 //			System.out.println("AAA");
 //			setConfig();
-//			System.out.println(data);
+			System.out.println(data);
 //		}
 		result = data.get(name);
 		return result;	
@@ -175,7 +175,7 @@ public class Configuration {
 				System.out.println("Exception forget change path usrDB.property");
 				e.printStackTrace();
 //				al.setStatus("E");
-//				success = "ไม่่พบ file:"+path+filename;
+//				success = "เน�เธกเน�เน�เธ�เธ� file:"+path+filename;
 			}
 		 return Configuration.TYPE;
 	}
@@ -221,7 +221,7 @@ public class Configuration {
 				System.out.println("Exception forget change path getSuperUser.property");
 				e.printStackTrace();
 //				al.setStatus("E");
-//				success = "ไม่่พบ file:"+path+filename;
+//				success = "เน�เธกเน�เน�เธ�เธ� file:"+path+filename;
 			}
 		 return Configuration.superUser1;
 	}
