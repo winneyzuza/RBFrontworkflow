@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="RBFrontCustomWorkFlow">
+        <wb-resource deploy-path="/" source-path="/WebContent" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
+        <wb-resource deploy-path="/WEB-INF/classes/" source-path="/ImportedClasses"/>
+        <dependent-module archiveName="mysql-connector-java-5.1.39-bin.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/mysql-connector-java-5.1.39-bin/mysql-connector-java-5.1.39-bin">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jersey-json-1.19.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jersey-json-1.19.1/jersey-json-1.19.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jersey-server-1.19.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jersey-server-1.19.1/jersey-server-1.19.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="asm-3.3.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/asm-3.3.1/asm-3.3.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jettison-1.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jettison-1.1/jettison-1.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jasypt-1.9.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jasypt-1.9.2/jasypt-1.9.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jersey-core-1.19.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jersey-core-1.19.1/jersey-core-1.19.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jackson-core-asl-1.9.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jackson-core-asl-1.9.2/jackson-core-asl-1.9.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="log4j-1.2.17.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/log4j-1.2.17/log4j-1.2.17">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jersey-client-1.19.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jersey-client-1.19.1/jersey-client-1.19.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jersey-servlet-1.19.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jersey-servlet-1.19.1/jersey-servlet-1.19.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="org.json-0.0.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/org.json-0.0.1/org.json-0.0.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jsr311-api-1.1.1.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jsr311-api-1.1.1/jsr311-api-1.1.1">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="sqljdbc42.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/sqljdbc42/sqljdbc42">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jackson-xc-1.9.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jackson-xc-1.9.2/jackson-xc-1.9.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jackson-mapper-asl-1.9.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jackson-mapper-asl-1.9.2/jackson-mapper-asl-1.9.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="jackson-jaxrs-1.9.2.jar" deploy-path="/WEB-INF/lib/" handle="module:/resource/jackson-jaxrs-1.9.2/jackson-jaxrs-1.9.2">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="RBFrontCustomWorkFlow"/>
+        <property name="java-output-path" value="/RBFrontCustomWorkFlow/build/classes"/>
+    </wb-module>
+</project-modules>
