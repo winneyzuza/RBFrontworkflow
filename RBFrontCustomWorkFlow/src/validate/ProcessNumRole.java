@@ -41,12 +41,31 @@ public class ProcessNumRole {
 			//preparedStatement.setString(1, branch);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			//System.out.println(preparedStatement);
+		//	System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: Rule Fetch Size=" + Integer.toString(resultSet.getFetchSize()));
 			while(resultSet.next()){
 				DayBranch = resultSet.getString("DayBranch");
 				Operation = resultSet.getString("Operation");
-				Value = Integer.parseInt(resultSet.getString("Value"));
+				try {
+					Value = Integer.parseInt(resultSet.getString("Value"));
+				} catch(Exception e){
+					Value = 0;
+					System.out.println("WS.FromValidate.ProcessNumRole.checkNumRole: Parse INT error - VALUE");
+				}
+					
 				Action = resultSet.getString("Action");
-				
+				if(DayBranch.isEmpty()) {
+					DayBranch = "All";
+				}
+				if (Operation.isEmpty()) {
+					System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: Operation value is empty!");
+				}
+				if (Value <= 0) {
+					System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: Value value is 0!");
+				}
+				if (Action.isEmpty()) {
+					System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: Action value is empty!");
+				}
+				System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: DayBranch-" + DayBranch + " Operator-" + Operation + " Value-" + Value + " Action-" + Action + " <<<<<");
 				if("All".equals(DayBranch)){
 					flag = flag && checkOperationNumRole(rq.getFwdPosition(),Operation,Value);
 					flag = flag && checkOperationNumRole(rq.getRevPosition(),Operation,Value);
@@ -70,9 +89,14 @@ public class ProcessNumRole {
 			}						
 			
 		} catch (SQLException e) {
+			System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: SQL Exception found - select command");
 			e.printStackTrace();
 		}finally{
-			try {	connect.close();} catch (SQLException e) {	}			
+			try {	
+				connect.close();
+			} catch (SQLException e) {	
+				System.out.println("WS.FormValidate.ProcessNumRole.checkNumRole: SQL Exception found - close command");
+			}			
 		}
 		
 		return flag;
