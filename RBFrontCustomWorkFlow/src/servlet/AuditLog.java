@@ -18,6 +18,18 @@ public class AuditLog {
 	private String module;
 	private String Desc;
 	private String Status;
+	private String userModified;
+	
+	public String getUserModified()
+    {
+        return userModified;
+    }
+
+    public void setUserModified(String userModified)
+    {
+        this.userModified = userModified;
+    }
+
 	
 	public String getModule() {
 		return module;
@@ -59,14 +71,15 @@ public class AuditLog {
 			
 				
 			PreparedStatement preparedStatement = connect
-		          .prepareStatement("insert into  tbldt_auditlog values ( ?, ?, ?, ?, ? )");
+		          .prepareStatement("insert into  tbldt_auditlog values ( ?, ?, ?, ?, ?, ? )");
 		      
 		      preparedStatement.setString(1, seq);
 		      preparedStatement.setString(2, this.module);
 		      preparedStatement.setString(3, this.Desc);
 		      preparedStatement.setString(4, this.Status);
 		      preparedStatement.setString(5, sdf.format(curDate));
-
+		      preparedStatement.setString(6, userModified);
+		      
 		      preparedStatement.executeUpdate();
 		} catch (SQLException e) {
 			System.out.println("AuditLog exception:");
