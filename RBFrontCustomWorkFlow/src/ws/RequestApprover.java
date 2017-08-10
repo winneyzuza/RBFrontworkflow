@@ -462,21 +462,29 @@ public class RequestApprover {
 		try{
 		  // PreparedStatements can use variables and are more efficient
 							
-			PreparedStatement preparedStatement = connect
-	          .prepareStatement("UPDATE tbldt_reqrepository SET Requestor = ? ,LastChange = ?"
-	          		+ " WHERE RequestID like ?");
+//			PreparedStatement preparedStatement = connect
+//	          .prepareStatement("UPDATE tbldt_reqrepository SET Requestor = ? ,LastChange = ?"
+//	          		+ " WHERE RequestID like ?");
 
 	      
-	      preparedStatement.setString(1, rq.getEmpID());
-	      preparedStatement.setString(2, sdf.format(curDate));
-	      preparedStatement.setString(3, rq.getRefNo());
+//	      preparedStatement.setString(1, rq.getEmpID());
+//	      preparedStatement.setString(2, sdf.format(curDate));
+//	      preparedStatement.setString(3, rq.getRefNo());
+
+	      	PreparedStatement preparedStatement = connect
+			          .prepareStatement("UPDATE tbldt_reqrepository SET LastChange = ?"
+			          		+ " WHERE RequestID like ?");
+			      
+			      preparedStatement.setString(1, sdf.format(curDate));
+			      preparedStatement.setString(2, rq.getRefNo());
+
 	      
-	      int count = preparedStatement.executeUpdate();
+			int count = preparedStatement.executeUpdate();
 	      //System.out.println(count);
 	      
-			flagResult = true;
+	      	flagResult = (count > 0) ? true : false;
 		}catch(Exception ex){
-			rs.setErrorMsg("Exception:"+ex.getMessage());
+			rs.setErrorMsg("WS.RequestApprover:updateReqRepository - Exception:"+ex.getMessage());
 			flagResult =  false;
 		}
 		finally{			
@@ -918,8 +926,11 @@ public class RequestApprover {
 						
 			ResultSet resultSet = preparedStatement.executeQuery();
 			System.out.println("RequestApprover:GetBoundary - Get OC_TYPE OK");
-			if (resultSet.first() && (!resultSet.wasNull())) {
-				resultSet.last();
+			// move to first row 
+			//if (resultSet.first() && (!resultSet.wasNull())) {
+			if (resultSet.next() && (!resultSet.wasNull())) {
+
+				//resultSet.last();
 				// resultSet valid & found at least one row 
 				octype = resultSet.getString("OC_TYPE");
 				jobtitle = resultSet.getString("Job_Title_EN");
