@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.ErrorMsg;
 
 import db.DatbaseConnection;
 import db.DatbaseConnectionMsSQL;
@@ -50,6 +49,7 @@ public class FormValidate {
 	  private String refNo ="";
 	  private String approver = "";
 	  private String msgError ="";
+	  private String running = "";
 	  
 	  private final Locale lc = new Locale("en","US");
 	  private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",lc);
@@ -82,7 +82,7 @@ public class FormValidate {
 			data.put("RevBranch", req.getParameter("RevBranch").trim());
 			data.put("RequestorID", req.getParameter("RequestorID").trim());
 			data.put("Escalation", req.getParameter("Escalation"));
-			
+			System.out.println("\n*** Requestor ID = " + req.getParameter("RequestorID") + "\n");
 			setValidateReq(data);
 			//printTest(data);
 			printTest2();
@@ -95,7 +95,7 @@ public class FormValidate {
 			System.out.println(flag+" validate");
 			flag = flag && validate(rq);
 			
-			System.out.println(flag+" check rastDay");
+			System.out.println(flag+" check vacation/leave day");
 			flag = flag && weekendDay(rq);
 			
 			System.out.println(flag+" check holiday");
@@ -106,7 +106,7 @@ public class FormValidate {
 			
 			System.out.println(flag+" check CA");
 			ProcessCA processCA = new ProcessCA();
-			flag = flag && processCA.checkCA(rq);
+			flag = flag & processCA.checkCA(rq);
 			if(!flag){
 				msgError = msgError + processCA.getMsgError();			
 			}else{
@@ -115,7 +115,7 @@ public class FormValidate {
 			
 			System.out.println(flag+" validate checkNumRole");
 			ProcessNumRole processNumR = new ProcessNumRole();
-			flag = flag && processNumR.checkNumRole(rq);
+			flag = flag & processNumR.checkNumRole(rq);
 			if(!flag){
 				msgError = msgError + processNumR.getMsgError();			
 			}else{
@@ -124,7 +124,7 @@ public class FormValidate {
 			
 			System.out.println(flag+" validate checkGroup");
 			ProcessGroup processGroup = new ProcessGroup();
-			flag = flag && processGroup.checkGroup(rq);
+			flag = flag & processGroup.checkGroup(rq);
 			if(!flag){
 				msgError = msgError + processGroup.getMsgError();				
 			}else{
@@ -132,20 +132,20 @@ public class FormValidate {
 			}			
 			
 			System.out.println(flag+" insertReqRepository");
-			flag = flag && insertReqRepository(flag);			  
+			flag = flag & insertReqRepository(flag);			  
 			
 			/////////// Appprover //////////
 			System.out.println(flag+" Approver validation start");
 			RequestApprover ra = new RequestApprover();
-			flag = flag && ra.mainRequestApprover(data.get("EmpID"),this.refNo,rq.getEscalation());
+			flag = flag & ra.mainRequestApprover(data.get("EmpID"),this.refNo,rq.getEscalation());
 			
 			if(!flag){
 				msgError = msgError + ra.getMsgError();				
 			}
 			
 			if(!flag){
-				rs.setRefNo(null);
-				rs.setErrorMsg("ผลการตรวจสอบ:"+msgError);
+				rs.setRefNo("ERR");
+				rs.setErrorMsg("ผลการตรวจสอบพบข้อผิดพลาด (ERROR):"+msgError);
 
 			}else{
 				rs.setErrorMsg("000=OK");				
@@ -230,7 +230,7 @@ public class FormValidate {
 		Date curDate = new Date();
 		boolean flagResult = true;
 		
-			seq = ControlSequenceTable.getSeqFormValidate();		
+		seq = ControlSequenceTable.getSeqFormValidate();		
 		if(seq==null) {
 			SimpleDateFormat format2 = new SimpleDateFormat("YYMMdHms",lc);
 			String date = format2.format(curDate);
@@ -240,41 +240,42 @@ public class FormValidate {
 			flagResult = false;
 			this.msgError = this.msgError+"Seq ";
 		}
+		running = ControlSequenceTable.getRunningFormValidate();
 		
 		Connection connect = DatbaseConnection.getConnectionMySQL();	
 		try{
 		  // PreparedStatements can use variables and are more efficient			
 			PreparedStatement preparedStatement = connect
-	          .prepareStatement("insert into  tbldt_wsformvalidaterq values ( ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+	          .prepareStatement("insert into  tbldt_wsformvalidaterq(PKey,TransDate,EmpID,EmpJobTitle,FwdEffectiveStartDate,FwdEffectiveEndDate,Fwdposition,FwdBranch,FwdLimit,RevLimit,RevPosition,RevBranch,RequestorID,Escalation) values ( ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-	      preparedStatement.setString(1, seq);
-	      preparedStatement.setString(2, sdf.format(curDate));
-	      preparedStatement.setString(3, data.get("EmpID"));
-	      //preparedStatement.setDate(4, new java.sql.Date(2009, 12, 11));
-	      preparedStatement.setString(4, data.get("EmpJobTitle"));
+			preparedStatement.setString(1, running);
+			preparedStatement.setString(2, sdf.format(curDate));
+			preparedStatement.setString(3, data.get("EmpID"));
+			//preparedStatement.setDate(4, new java.sql.Date(2009, 12, 11));
+			preparedStatement.setString(4, data.get("EmpJobTitle"));
 	      
 	      //String string = "January 2, 2010";
-//	      DateFormat format = new SimpleDateFormat("yyyyMMd", Locale.ENGLISH);
-//	      Date FwdEffectiveStartDate = format.parse(data.get("FwdEffectiveStartDate"));
-//	      preparedStatement.setDate(5, new java.sql.Date(FwdEffectiveStartDate.getTime()));
-//	      Date FwdEffectiveEndDate = format.parse(data.get("FwdEffectiveEndDate"));
-//	      preparedStatement.setDate(6, new java.sql.Date(FwdEffectiveEndDate.getTime()));
+//	      	DateFormat format = new SimpleDateFormat("yyyyMMd", Locale.ENGLISH);
+//	      	Date FwdEffectiveStartDate = format.parse(data.get("FwdEffectiveStartDate"));
+//	      	preparedStatement.setDate(5, new java.sql.Date(FwdEffectiveStartDate.getTime()));
+//	      	Date FwdEffectiveEndDate = format.parse(data.get("FwdEffectiveEndDate"));
+//	      	preparedStatement.setDate(6, new java.sql.Date(FwdEffectiveEndDate.getTime()));
 	      
-	      preparedStatement.setString(5, data.get("FwdEffectiveStartDate"));
-	      preparedStatement.setString(6, data.get("FwdEffectiveEndDate"));
+			preparedStatement.setString(5, data.get("FwdEffectiveStartDate"));
+			preparedStatement.setString(6, data.get("FwdEffectiveEndDate"));
 	      
-	      preparedStatement.setString(7, data.get("FwdPosition"));
-	      preparedStatement.setString(8, data.get("FwdBranch"));
-	      preparedStatement.setString(9, data.get("FwdLimit"));
-	      preparedStatement.setString(10, data.get("RevLimit"));
-	      preparedStatement.setString(11, data.get("RevPosition"));
-	      preparedStatement.setString(12, data.get("RevBranch"));
-	      preparedStatement.setString(13, data.get("RequestorID"));
-	      preparedStatement.setString(14, data.get("Escalation"));
-	      preparedStatement.executeUpdate();
+			preparedStatement.setString(7, data.get("FwdPosition"));
+			preparedStatement.setString(8, data.get("FwdBranch"));
+			preparedStatement.setString(9, data.get("FwdLimit"));
+			preparedStatement.setString(10, data.get("RevLimit"));
+			preparedStatement.setString(11, data.get("RevPosition"));
+			preparedStatement.setString(12, data.get("RevBranch"));
+			preparedStatement.setString(13, data.get("RequestorID"));
+			preparedStatement.setString(14, data.get("Escalation"));
+			preparedStatement.executeUpdate();
 	      
-	      flagResult = true;
-//	      System.out.println(preparedStatement);
+			flagResult = true;
+//	      	System.out.println(preparedStatement);
 
 		}catch(Exception ex){
 			rs.setErrorMsg("insertFormValidagteRq:"+ex.getMessage());
@@ -313,9 +314,9 @@ public class FormValidate {
 		
 		result  = checkEmpID(rq.getRequestorID());
 		if(!result){  msg = msg+"RequestorID "; finalResult = false; }
-		
+			
 		System.out.println("validate result : "+finalResult);		
-		if(!finalResult){  this.msgError = this.msgError +msg+"ค่าไม่ถูกต้อง"; }
+		if(!finalResult){  this.msgError = this.msgError +msg+" ค่าไม่ถูกต้อง"; }
 		return finalResult;
 	}
 	
@@ -361,6 +362,7 @@ public class FormValidate {
 	
 	@SuppressWarnings("finally")
 	public boolean checkBranch(String branch) {
+		// This function will return the result of branch existence (T/F)
 		boolean flag = true;
 		Connection connect = DatbaseConnection.getConnectionMySQL();
 		try {
@@ -371,10 +373,11 @@ public class FormValidate {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			resultSet.next();
 			//System.out.println("checkBranch result: "+resultSet.getInt(1));
-			if( resultSet.getInt(1) > 0)
-				flag = true;
-			else 
-				flag = false;			
+		//	if( resultSet.getInt(1) > 0)
+		//		flag = true;
+		//	else 
+		//		flag = false;
+			flag = (resultSet.getInt(1) > 0)? true : false;
 			
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -390,27 +393,33 @@ public class FormValidate {
 		Connection connect = DatbaseConnection.getConnectionMySQL();	
 		try{
 			  Date curDate = new Date();
-			  seq = ControlSequenceTable.getSeqFormValidate();		
+			  seq = ControlSequenceTable.getRunningFormValidate();		
 			  if(seq==null) {
 				  rs.setErrorMsg(this.msgError+"-returnFromValidateRes: cannot get sequence id");
 			  } else {
 			  // PreparedStatements can use variables and are more efficient
 //			  System.out.println(rs.getErrorMsg().length());			
-			  PreparedStatement preparedStatement = connect
-		          .prepareStatement("insert into  tbldt_wsformvalidaters values ( ?, ?, ?, ?)");
-
-		      preparedStatement.setString(1, seq);
-		      preparedStatement.setString(2, sdf.format(curDate.getTime()));
-		      preparedStatement.setString(3, rs.getRefNo());
-		      preparedStatement.setString(4, rs.getErrorMsg());
-		      
-		      preparedStatement.executeUpdate();
+				  PreparedStatement preparedStatement = connect
+						  .prepareStatement("insert into tbldt_wsformvalidaters(PKey,TransDate,RefNo,ErrorMsgType) values ( ?, ?, ?, ?)");
+				  String errmsg = "";
+				  preparedStatement.setString(1, seq);
+				  preparedStatement.setString(2, sdf.format(curDate.getTime()));
+				  preparedStatement.setString(3, rs.getRefNo());
+				  errmsg = rs.getErrorMsg().trim()+"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+				  if (errmsg.length() > 254) errmsg = errmsg.substring(0, 255);
+				  preparedStatement.setString(4, errmsg);
+				  System.out.println("errmsg >>> " + errmsg.length());
+				  if (preparedStatement.executeUpdate() > 0) {
+					  System.out.println("returnFormValidateRes(): Insert into tbldt_wsformvalidaters succeed");
+				  } else {
+					  System.out.println("returnFormValidateRes(): Insert into tbldt_wsformvalidaters failed");
+				  }
 			  }
 			}catch(Exception ex){
 				rs.setErrorMsg(this.msgError+"returnFormValidateRes: "+ex.getMessage()+" in table tbldt_wsformvalidaters");
 			}finally{
 				
-				try {	connect.close();} catch (SQLException e) {	}
+				try {	connect.close();} catch (SQLException e) { System.out.println("returnFormValidateRes() error in connection closing");	}
 				return rs;	
 			}
 	}
@@ -422,8 +431,10 @@ public class FormValidate {
 		//Locale lc = new Locale("en","US");		
 		SimpleDateFormat format2 = new SimpleDateFormat("YYYYMM",lc);
 		String date = format2.format(curDate);			    
-	    refNo = date+seq+statusReq;
+	    refNo = date+seq+statusReq.substring(0,1);
 	    rs.setRefNo(refNo);
+	    System.out.println("FormValidate.class: insertReqRepository - RequestID=" + refNo);
+	    refNo = refNo.substring(0, 12); // new add 2017-07-12
 	    
 	    EmployeeInfo empInfo = new EmployeeInfo(rq.getEmpID());
 	    String status = "N";
@@ -443,7 +454,8 @@ public class FormValidate {
 		      preparedStatement.setString(1, refNo);
 		      preparedStatement.setString(2, sdf.format(curDate));
 		      preparedStatement.setString(3, "RSAKey");
-		      preparedStatement.setString(4, ""); // requestor
+		      //preparedStatement.setString(4, ""); // requestor
+		      preparedStatement.setString(4, rq.getRequestorID()); // requestor
 		      preparedStatement.setString(5, rq.getEmpID()); //EmpID
 		      
 		      preparedStatement.setString(6, empHR.getFull_Name_TH()); //EmpName
@@ -469,7 +481,7 @@ public class FormValidate {
 		      preparedStatement.setString(23, status); // Status
 		      //preparedStatement.setDate(24, new java.sql.Date(curDate.getTime())); // LastChange
 		      preparedStatement.setString(24, sdf.format(curDate));//(24, new java.sql.Date(curDate.getTime())); // LastChange
-		      preparedStatement.setString(25, "new request"); // Remark
+		      preparedStatement.setString(25, ""); // Remark
 		      
 		      preparedStatement.executeUpdate();
 		      
