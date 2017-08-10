@@ -143,6 +143,7 @@ public class BranchInfo {
 	
 	public static String getAO(String branchID){
 		String AO = "";
+		String AreaID = "";
 		
 		Connection connect = DatbaseConnection.getConnectionMySQL();
 		try {
@@ -153,9 +154,9 @@ public class BranchInfo {
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
 			//System.out.println("checkBranch result: "+resultSet.getInt(1));
-			if( resultSet.next())
-				AO = resultSet.getString("AreaNo");				
-			
+			if(resultSet.next())
+				AO = resultSet.getString("AreaNo");	
+			System.out.println("BranchInfo class: getAO - query passed - found Area Name :" + AO);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}finally{
@@ -164,9 +165,41 @@ public class BranchInfo {
 			} catch (SQLException e) {
 			}			
 		} 
+		return AreaID;
+	}
+
+	public static String getAOID(String branchID){
+		String AO = "";
+		String AreaID = "";
 		
-		
-		return AO;
+		Connection connect = DatbaseConnection.getConnectionMySQL();
+		try {
+			
+			PreparedStatement preparedStatement = connect
+			          .prepareStatement("select AreaNo from tblmt_branchinfo b where b.OrgCode like ? ");
+			preparedStatement.setString(1, branchID);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			//System.out.println("checkBranch result: "+resultSet.getInt(1));
+			if(resultSet.next())
+				AO = resultSet.getString("AreaNo");	
+			System.out.println("BranchInfo class: getAOID - query passed - found Area Name :" + AO);
+			//
+			preparedStatement = connect.prepareStatement("select al.areaid from tbldt_arealist al where al.areaname like ?");
+			preparedStatement.setString(1, AO);
+			resultSet = preparedStatement.executeQuery();
+			if(resultSet.next()) 
+				AreaID = resultSet.getString("areaid");
+			System.out.println("BranchInfo class: getAOID - query passed - found Area Name :" + AreaID);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		} 
+		return AreaID;
 	}
 	
 	public static String getNW(String branchID){
@@ -195,5 +228,38 @@ public class BranchInfo {
 		
 		
 		return NW;
+	}
+	public static String getNWID(String branchID){
+		String NW = "";
+		String NWID = "";
+		
+		Connection connect = DatbaseConnection.getConnectionMySQL();
+		try {
+			
+			PreparedStatement preparedStatement = connect
+			          .prepareStatement("select Network from tblmt_branchinfo b where b.OrgCode like ? ");
+			preparedStatement.setString(1, branchID);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			//System.out.println("checkBranch result: "+resultSet.getInt(1));
+			if(resultSet.next())
+				NW = resultSet.getString("Network");	
+			System.out.println("BranchInfo class: getNWID - query passed - found Area Name :" + NW);
+			//
+			preparedStatement = connect.prepareStatement("select rl.regionid from tbldt_regionlist rl where rl.areaname like ?");
+			preparedStatement.setString(1, NW);
+			resultSet = preparedStatement.executeQuery();
+			if(resultSet.next()) 
+				NWID = resultSet.getString("regionid");
+			System.out.println("BranchInfo class: getNWID - query passed - found Area Name :" + NWID);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}
+		} 
+		return NWID;
 	}
 }
