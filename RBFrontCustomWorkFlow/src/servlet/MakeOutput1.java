@@ -290,6 +290,7 @@ public class MakeOutput1 extends HttpServlet{
 			try {
 				connect.close();
 			} catch (SQLException e) {
+				System.out.println("Makeoutput1.class:getJobTitle Error closing connection");
 			}			
 		}
 		
@@ -416,28 +417,35 @@ public class MakeOutput1 extends HttpServlet{
 		System.out.println("path:"+path);
 		
 		String filename = Configuration.getParam("FileNameOutput1");
-		 System.out.println("approveExportFile");
+		System.out.println("approveExportFile");
 		 
-		 String sql = "select * from tbldt_output1 t where t.Complete not like 'Y' order by t.CurBr,t.UserID ";
+		String sql = "select * from tbldt_output1 t where t.Complete not like 'Y' order by t.CurBr,t.UserID ";
+		FileWriter writer = null;
+		String file = path+filename;
+		try { 
+			writer = new FileWriter(file, false);
+			writer.write("'UserID'	'CurBr'	'Curpos'	'Limit'	'TermID'	'Action'	'NewBr'	'NewPos'	'NewLimit'	'NewTermID'	'Mode' \n");
+		} catch (Exception e) {
+			System.out.println("MakeOutput1:generateFile - Cannot create output file (New FileWriter");
+		}
+		
+		
 		try {
 			preparedStatement = connect.prepareStatement(sql);
 
-		//System.out.println(sql);
-		ResultSet resultSet = preparedStatement.executeQuery();
-		
-		String file = path+filename;
-		FileWriter writer = new FileWriter(file, false);
-		String info = "";
-		while(resultSet.next()){
-			//System.out.println(resultSet.getString("UserID")+","+resultSet.getString("CurBr")+","+resultSet.getString("Curpos"));
-			info = info+"'"+resultSet.getString("UserID")+"','"+resultSet.getString("CurBr")+"','"+resultSet.getString("Curpos")+"','"
-				 + resultSet.getString("CurLimit")+"','"+resultSet.getString("TermID")+"','"+resultSet.getString("Action")+"','"
-				 + resultSet.getString("NewBr")+"','"+resultSet.getString("NewPos")+"','"+resultSet.getString("NewLimit")+"','"
-				 + resultSet.getString("NewTermID")+"','"+resultSet.getString("ModeOutput")+"' \n";
-		}
-		writer.write(info);
-		writer.flush();
-        writer.close();		
+			//System.out.println(sql);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			String info = "";
+			while(resultSet.next()){
+				//System.out.println(resultSet.getString("UserID")+","+resultSet.getString("CurBr")+","+resultSet.getString("Curpos"));
+				info = info+"'"+resultSet.getString("UserID")+"'\t'"+resultSet.getString("CurBr")+"'\t'"+resultSet.getString("Curpos")+"'\t'"
+				 + resultSet.getString("CurLimit")+"'\t'"+resultSet.getString("TermID")+"'\t'"+resultSet.getString("Action")+"'\t'"
+				 + resultSet.getString("NewBr")+"'\t'"+resultSet.getString("NewPos")+"'\t'"+resultSet.getString("NewLimit")+"'\t'"
+				 + resultSet.getString("NewTermID")+"'\t'"+resultSet.getString("ModeOutput")+"' \n";
+			}
+			writer.write(info);
+			writer.flush();
+			writer.close();		
 	    
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
@@ -451,6 +459,25 @@ public class MakeOutput1 extends HttpServlet{
 		
 	}
 	
+	private boolean DateBetween(String sDate, String eDate, String checkDate) {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); 
+		boolean result = false; 
+		try {
+			Date SearchstartDate = (Date)formatter.parse(sDate);
+			Date SearchendDate = (Date)formatter.parse(eDate);
+			Date check1Date = (Date)formatter.parse(checkDate + " 00:01:01");
+			if ((!check1Date.before(SearchstartDate)) && (!check1Date.after(SearchendDate))) { // effective date is in between search start and end date
+				result = true;
+			} else {
+				result = false;
+			}
+		} catch (Exception e) {
+			System.out.println("MakeOutput1.class: DateBetween - Exception in date transforms & comparison");
+		}
+		System.out.println("MakeOutput1.class: DateBetween - sDate=" + sDate + " eDate=" + eDate + " checkDate=" + checkDate + " Result=" + result);
+		return result; 
+	}
+	
 	@SuppressWarnings("resource")
 	public void startProcessOutput2(String sDate,String eDate,String type,String complete){
 		System.out.println("ApproveProcess.getData");
@@ -462,62 +489,60 @@ public class MakeOutput1 extends HttpServlet{
 		  
 		connect = DatbaseConnection.getConnectionMySQL();
 		
+		boolean debugging = true;
+		
 		try{
 			preparedStatement = connect.prepareStatement("delete from tbldt_output2 ");		
 			preparedStatement.executeUpdate();
 			System.out.println("delete  tbldt_output2 success");
 		} catch(Exception e){
 			e.printStackTrace();
-			System.out.println("Exception delete tbldt_output2:"+e.getMessage());
+			System.out.println("MakeOutput1.class:Exception delete tbldt_output2:"+e.getMessage());
 		}
 		// forward query statement
-		String sql1 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
+		String sql1 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.RevLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, rq.Remark, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
 					 +" FROM tbldt_reqrepository rq JOIN tblmt_employeeinfo e ON rq.EmpID = e.EmpID WHERE (rq.Status = 'A') "
-					 +" AND (rq.EffStartDate  BETWEEN ? AND ?) "
-					 +" AND (rq.CompleteF = 'N' AND rq.CompleteR = 'N')";
+					 +" AND (rq.EffStartDate  BETWEEN ? AND ?) ";
+					if (complete.equals("Y")) { // Forward Complete case
+						sql1 = sql1 +" AND (rq.CompleteF = 'Y')"; 
+					} else {
+						if (complete.equals("N")) { // Not complete case
+							sql1 = sql1 +" AND (rq.CompleteF = 'N')";
+						} else {
+							// do nothing
+							sql1 = sql1 + " AND (rq.CompleteF like '%')";
+						}
+					}
+					 
+					
 		// backward query statement
-		String sql2 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
+		String sql2 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.RevLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, rq.Remark, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
 				     +" FROM tbldt_reqrepository rq JOIN tblmt_employeeinfo e ON rq.EmpID = e.EmpID  WHERE NOT (rq.Status = 'R' OR rq.Status = 'C') "
-				     +" AND (rq.EffEndDate  BETWEEN ? AND ?) "
-				     +" AND rq.CompleteF = 'Y'";
+				     +" AND (rq.EffEndDate  BETWEEN ? AND ?) ";
+					if (complete.equals("Y")) { // Backward Complete case
+						sql2 = sql2 +" AND (rq.CompleteF = 'Y' AND rq.CompleteR = 'Y')";
+					} else {
+						if (complete.equals("N")) {
+							sql2 = sql2 + " AND (rq.CompleteF = 'Y' AND rq.CompleteR = 'N')";
+						} else {
+							sql2 = sql2 + " AND rq.CompleteF = 'Y'";
+						}
+					}
 		// forward + backward query statement
-		String sql3 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
+		String sql3 = "SELECT rq.RequestID, rq.ReqSubmitDate, rq.RSAReferenceID, rq.Requestor, rq.FwdLimit, rq.RevLimit, rq.FwdBranch, rq.RevBranch, rq.EmpID, rq.EmpName, rq.CorpTitleID, rq.CorpTitleName, rq.JobTitleID, rq.JobTitleName, rq.EffStartDate, rq.EffEndDate, rq.CurPosition, rq.FwdPosition, rq.RevPosition, rq.Approver, rq.Status, rq.LastChange, rq.CompleteF, rq.CompleteR, rq.Remark, e.BranchID, e.TechnicalRole, e.CurLimit, e.TerminalID  " 
 				     +" FROM tbldt_reqrepository rq JOIN tblmt_employeeinfo e ON rq.EmpID = e.EmpID WHERE (rq.Status = 'A' OR rq.Status = 'F') "
 				     +" AND ((rq.EffStartDate  BETWEEN ? AND ?)  "
-				     +" OR (rq.EffEndDate  BETWEEN ? AND ? )) ";
-		 
+				     +" OR (rq.EffEndDate  BETWEEN ? AND ? ))";
+					if (complete.equals("Y")) {
+						sql3 = sql3 + " AND (rq.CompleteF = 'Y' OR rq.CompleteR = 'Y')";
+					} else {
+						if (complete.equals("N")) {
+							sql3 = sql3 + " AND (rq.CompleteF = 'N' OR rq.CompleteR = 'N')";
+						}
+					}
 		
-		/* old condition
-		String sql1 = "select t.EmpID,e.BranchID,e.TechnicalRole,e.CurLimit,e.TerminalID,'Change',t.FwdBranch,t.FwdPosition,FwdLimit,'newTerminl','Forward',t.CompleteF " 
-			 +" from tbldt_reqrepository t"
-			 +" join tblmt_employeeinfo e on t.EmpID = e.EmpID"
-			 +" where t.Status like 'A' "
-			 +" and t.EffStartDate between ? and ? "
-			 +" and t.CompleteF like ";
-		
-		String sql2 = " select t.EmpID,e.BranchID,e.TechnicalRole,e.CurLimit,e.TerminalID,'Change2',t.RevBranch,t.RevPosition,RevLimit,'newTerminl','Backward',t.CompleteR "
-				 +" from tbldt_reqrepository t"
-				 +" join tblmt_employeeinfo e on t.EmpID = e.EmpID"
-				 +" where t.Status like 'A' "
-				 +" and t.EffEndDate between ? and ? "
-				 +" and t.CompleteR like ";
-		
-		String sql3 = "(select t.EmpID,e.BranchID,e.TechnicalRole,e.CurLimit,e.TerminalID,'Change',t.FwdBranch,t.FwdPosition,FwdLimit,'newTerminl','Forward',t.CompleteF " 
-				 +" from tbldt_reqrepository t"
-				 +" join tblmt_employeeinfo e on t.EmpID = e.EmpID"
-				 +" where t.Status like 'A' "
-				 +" and t.EffStartDate between ? and ? "
-				 +" and t.CompleteF like ? ) "
-				 +" UNION"
-				 +" (select t.EmpID,e.BranchID,e.TechnicalRole,e.CurLimit,e.TerminalID,'Change2',t.RevBranch,t.RevPosition,RevLimit,'newTerminl','Backward',t.CompleteR "
-				 +" from tbldt_reqrepository t"
-				 +" join tblmt_employeeinfo e on t.EmpID = e.EmpID"
-				 +" where t.Status like 'A' "
-				 +" and t.EffEndDate between ? and ? "
-				 +" and t.CompleteR like ? ) ";
-		//System.out.println(sql);
-		 
-		 */
+		sDate = sDate + " 00:00:00";
+		eDate = eDate + " 23:59:59";
 		try {
 			
 			if(type.equals("F")){
@@ -540,24 +565,56 @@ public class MakeOutput1 extends HttpServlet{
 				//preparedStatement.setString(3, complete);
 				preparedStatement.setString(3, sDate);
 				preparedStatement.setString(4, eDate);
-				//preparedStatement.setString(6, complete);
+				//preparedStatement.setString(5, complete);
 			}
 			
 //			System.out.println("AA:"+preparedStatement);
 			//preparedStatement.setString(1, ref);
-			
-			ResultSet resultSet = preparedStatement.executeQuery();
-			String NewBranch =  "";
-			String NewPosition = "";
-			String NewLimit = "";
-			String NewTerminalID = "";
-			String Action = "";
-			String Mode = "";
-			String Complete = "";
+			boolean querypass = false;
+			ResultSet resultSet = null;
+			try {
+				resultSet = preparedStatement.executeQuery();
+				querypass = true;
+			} catch (SQLException se) {
+				System.out.println("MakeOutput1.class: Query exception on Type=" + type);
+			}
+//			String NewBranch =  "";
+//			String NewPosition = "";
+//			String NewLimit = "";
+//			String NewTerminalID = "";
+//			String Action = "";
+//			String Mode = "";
+//			String Complete = "";
 			String Checked ="";
-			
-			while(resultSet.next()){
-				HashMap<String,String> data = new HashMap<String,String>();
+//			String DoubleRecords = "No";
+			String FwdBranch, RwdBranch = "";
+			String FwdRole, RwdRole, FwdPosition, RwdPosition = "";
+			String FwdLimit, RwdLimit, FwdTerminal,RwdTerminal = "";
+			String FwdAction,RwdAction, FwdComplete, RwdComplete = "";
+			String FwdEffDate, RwdEffDate = "";
+			boolean FwdPublish, RwdPublish = false;
+
+			while(resultSet.next() & querypass){
+				HashMap<String,String> dataFwd = new HashMap<String,String>();
+				HashMap<String,String> dataRwd = new HashMap<String,String>();
+				FwdBranch = "";
+				RwdBranch = "";
+				FwdPosition = "";
+				RwdPosition = "";
+				FwdLimit = "";
+				RwdLimit = "";
+				FwdTerminal = "";
+				RwdTerminal = "";
+				FwdAction = "";
+				RwdAction = "";
+				FwdComplete = "";
+				RwdComplete = "";
+				FwdEffDate = "";
+				RwdEffDate = "";
+				FwdRole = "";
+				RwdRole = "";
+				FwdPublish = false;
+				RwdPublish = false;
 				
 				String EmpID = resultSet.getString("EmpID");
 				String BranchID = resultSet.getString("BranchID");
@@ -566,59 +623,345 @@ public class MakeOutput1 extends HttpServlet{
 				String TerminalID = resultSet.getString("TerminalID");
 				String completeF = resultSet.getString("CompleteF");
 				String completeR = resultSet.getString("CompleteR");
+
+				// data populate section start **********************************
+				FwdBranch = resultSet.getString("FwdBranch");
+				RwdBranch = resultSet.getString("RevBranch");
+				FwdPosition = resultSet.getString("FwdPosition");
+				RwdPosition = resultSet.getString("RevPosition");
+				FwdLimit = resultSet.getString("FwdLimit");
+				RwdLimit = resultSet.getString("RevLimit");
+				FwdEffDate = resultSet.getString("EffStartDate");
+				RwdEffDate = resultSet.getString("EffEndDate");
+				// data populate section end **********************************
 				
-				if (type.equals("F")){
+			// computation logic ********************************************** 
+				// check type of query (F-Forward, B-Backward, A-All)
+				if (type.equals("F")) { 
+					FwdPublish = true; 
+				} else if (type.equals("B")) {
+					RwdPublish = true;
+				} else if (type.equals("A")) { 
+					FwdPublish = true; RwdPublish = true; 
+				} else {
+					FwdPublish = false; 
+					RwdPublish = false;
+				}
+				if (debugging) System.out.println("MakeOutput1.class: Type evalute FWD=" + FwdPublish + " RWD=" + RwdPublish);
+				
+				// check date 
+				FwdPublish = FwdPublish & DateBetween(sDate, eDate, FwdEffDate);
+				RwdPublish = RwdPublish & DateBetween(sDate, eDate, RwdEffDate);
+				if (debugging) System.out.println("MakeOutput1.class: Date evalute FWD=" + FwdPublish + " RWD=" + RwdPublish);
+				
+				// check completion query flag
+				if (complete.equals("Y")) {
+					FwdPublish = FwdPublish & completeF.equals("Y");
+					RwdPublish = RwdPublish & completeR.equals("Y");
+				} else if (complete.equals("N")) {
+					FwdPublish = FwdPublish & completeF.equals("N");
+					RwdPublish = RwdPublish & completeR.equals("N");
+				} else if (complete.equals("%")) {
+					FwdPublish = FwdPublish & true;
+					RwdPublish = RwdPublish & true;
+				} else {
+					System.out.println("MakeOutput1.class: Complete query flag invalid =" + complete);
+					FwdPublish = false; 
+					RwdPublish = false;
+				}
+				if (debugging) System.out.println("MakeOutput1.class: Complete evalute FWD=" + FwdPublish + " RWD=" + RwdPublish);
+				
+				// TO-DO
+				// Action Change/Move in output1
+				// 
+				
+/* ************************ OLD CODE & LOGIC ***************************** */				
+//				if (type.equals("F")){
+//					FwdBranch = resultSet.getString("FwdBranch");
+//					FwdPosition = resultSet.getString("FwdPosition");
+//					FwdLimit = resultSet.getString("FwdLimit");
+//					FwdAction = "Forward";
+//					FwdComplete = resultSet.getString("CompleteF");
+//				}else if(type.equals("B")){
+//					RwdBranch = resultSet.getString("RevBranch");
+//					RwdPosition = resultSet.getString("RevPosition");
+//					RwdLimit = resultSet.getString("RevPosition");
+//					RwdAction = "Backward";
+//					RwdComplete = resultSet.getString("CompleteR");
+//				}else if(type.equals("A")){
+					// One request need to be check whether it needs 2 separate records or not
+//					if(completeF.toUpperCase().equals("Y") && completeR.toUpperCase().equals("N")) { // forward done - show backward
+//						NewBranch = resultSet.getString("RevBranch");
+//						NewPosition = resultSet.getString("RevPosition");
+//						NewLimit = resultSet.getString("RevPosition");
+//						Action = "Backward";
+//						Complete = resultSet.getString("CompleteR");
+//						DoubleRecords = "No";
+//					} else {
+//						if(completeF.toUpperCase().equals("N")) { // forward 
+//							NewBranch = resultSet.getString("FwdBranch");
+//							NewPosition = resultSet.getString("FwdPosition");
+//							NewLimit = resultSet.getString("FwdLimit");
+//							Action = "Forward";
+//							Complete = resultSet.getString("CompleteF");
+//							DoubleRecords = "Maybe";
+//						} else {
+//							if(completeR.toUpperCase().equals("Y")) {
+//								NewBranch = BranchID;
+//								NewPosition = TechnicalRole;
+//								NewLimit = Limit;
+//								System.out.println("MakeOutput1.class: CompleteF & CompleteR both are YES");
+//								DoubleRecords = "No";
+//							}
+//						}
+//					}
+//					if (DoubleRecords.equals("Maybe")) {
+//						// check sDate & eDate with search range
+//						SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); 
+//						try {
+//							Date SearchstartDate = (Date)formatter.parse(sDate);
+//							Date SearchendDate = (Date)formatter.parse(eDate);
+//							Date effStartDate = (Date)formatter.parse(resultSet.getString("EffStartDate"));
+//							Date effEndDate = (Date)formatter.parse(resultSet.getString("EffEndDate"));
+//							System.out.println("MakeOutput1.class: sDate=" + sDate + " eDate=" + eDate + " EffStart=" + resultSet.getString("EffStartDate") + " EffEnd=" + resultSet.getString("EffEndDate"));
+//							if ((!effStartDate.before(SearchstartDate)) && (!effEndDate.after(SearchendDate))) { // effective date is in between search start and end date
+//								DoubleRecords = "Yes";
+//							} else {
+//								DoubleRecords = "Maybe No";
+//							}
+//						} catch (Exception e) {
+//							DoubleRecords = "No";
+//							System.out.println("MakeOutput1.class:StartProcessOutput2 - Exception in date transforms & comparison");
+//						}
+//					}
+//				}
+				
+//				Mode = Action;
+//				Checked = Complete;
+//				if(BranchID.equals(NewBranch)){
+//					Action = "Change";
+//				}else{
+//					Action = "Move";
+//				}
+				
+				if (debugging) System.out.println("output2:"+EmpID+":"+BranchID+":"+TechnicalRole+":"+Limit+" TerminalID :"+TerminalID);
+				dataFwd = convertBusToTecRole(EmpID,FwdPosition,FwdBranch,FwdLimit);
+				dataRwd = convertBusToTecRole(EmpID,RwdPosition,RwdBranch,RwdLimit);
+				//System.out.println("behigh:"+data.get("role")+":"+data.get("limit"));
+				FwdPosition = dataFwd.get("role");
+				RwdPosition = dataRwd.get("role");
+				FwdLimit = dataFwd.get("limit");
+				RwdLimit = dataRwd.get("limit");
+				if (debugging) System.out.println("MakeOutput1.class: FwdPosition=" + FwdPosition + " RwdPosition=" + RwdPosition + " FwdLimit=" + FwdLimit + " RwdLimit=" + RwdLimit);
+				//System.out.println("ApproveProcess.getData.getNewTerminal");
+				FwdTerminal = (getNewTerminal(EmpID,FwdBranch) == null) ? "NULL" : getNewTerminal(EmpID,FwdBranch);
+				RwdTerminal = (getNewTerminal(EmpID,RwdBranch) == null) ? "NULL" : getNewTerminal(EmpID,RwdBranch);
+				String RequestID = resultSet.getString("RequestID");
+				
+				// get new terminal if remark exist (Add 2017-07-23)
+				if (!"".equals(resultSet.getString("Remark")) && resultSet.getString("Remark").length() > 0) {
+					// remark exist & length more than 0
+					String rem = resultSet.getString("Remark").trim();
+					if (!"new request".equals(rem)) {
+						// not default remark phrase
+						int dash = rem.indexOf("-", 0);
+						if (dash > 0) {
+							// found dash (-) then extract FWD & BWD
+							// start extract FWD
+							FwdTerminal = rem.substring(0, dash);
+							// start extract RWD/BWD
+							RwdTerminal = rem.substring(dash+1, rem.length());
+						} else {
+							if (dash == -1 && rem.length() > 4) {
+								// -1 mean not found & remark exist with length more than 4
+								// start extract FWD
+								FwdTerminal = rem;
+							} else {
+								// not normal case
+								System.out.println("MakeOutput1.class: Warning - Remark column invalid");
+								FwdTerminal = "";
+								RwdTerminal = "";
+							}
+						}
+					} else {
+						System.out.println("MakeOutput1.class: Info - Remark column value is default");
+						FwdTerminal = "";
+						RwdTerminal = "";
+					}
+				}
+				// get new terminal end
+				boolean flag = true;
+				String Action = "";
+				// 
+				if (debugging) System.out.println("MakeOutput1.class: Start to publish to tbldt_output2");
+				// Start Forward request check
+				if (FwdPublish) {
+					if (debugging) System.out.println("MakeOutput1.class: Start Forward request check");
+					if(BranchID.equals(FwdBranch)){
+						Action = "Change";
+					}else{
+						Action = "Move";
+					}
+					if (RwdPublish) RequestID = RequestID + "-1"; // if backward request will be publish too need to distinguish by add -1
+					Checked = completeF;
+					if (debugging) System.out.println("Fwd RequestID " + RequestID);
+					flag = insertOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,FwdBranch,FwdPosition,FwdLimit,FwdTerminal,"Forward",completeF,Checked,RequestID);
+					if (debugging) System.out.println("MakeOutput1.class: Finish Forward request check");
+					if (debugging) System.out.println("MakeOutput1.class: Value published Emp= " + EmpID + " :Branch=" + BranchID + " :TechRole=" + TechnicalRole + " :Limit=" + Limit + " :Term=" + TerminalID + " :Action=" + Action + " :NextBranch=" + FwdBranch + " :NextPosition=" + FwdPosition + " :NextLimit=" + FwdLimit + " :NextTerm=" + FwdTerminal + " :Complete=" + completeF + " :Checked=" + Checked + " :RequestID=" + RequestID);
+				}
+				
+				// Start Backward request check
+				if (RwdPublish) {
+					if (debugging) System.out.println("MakeOutput1.class: Start Backward request check");
+					if(FwdBranch.equals(RwdBranch)){
+						Action = "Change";
+					}else{
+						Action = "Move";
+					}
+					if (FwdPublish) RequestID = RequestID + "-2"; // if forward request will be publish too need to distinguish by add -2
+					Checked = completeR;
+					if (completeF.equalsIgnoreCase("Y")) {
+						if (debugging) System.out.println("Rwd1 RequestID " + RequestID);
+						flag = flag & insertOutput2(EmpID,FwdBranch,FwdPosition,FwdLimit,FwdTerminal,Action,RwdBranch,RwdPosition,RwdLimit,RwdTerminal,"Backward",completeR,Checked,RequestID);
+					} else {
+					//	if (FwdPublish) {
+					//		if (debugging) System.out.println("Rwd2 RequestID " + RequestID);
+					//		flag = flag & insertOutput2(EmpID,FwdBranch,FwdPosition,FwdLimit,FwdTerminal,Action,RwdBranch,RwdPosition,RwdLimit,RwdTerminal,"Backward",completeR,Checked,RequestID);
+					//	} else {
+							System.out.println("MakeOutput1.class: Forward request is not publish OR not complete - Skip backward request");
+							flag = false;
+					//	}
+					}
+					if (debugging) System.out.println("MakeOutput1.class: Finish Backward request check");					
+					if (debugging) System.out.println("MakeOutput1.class: Value published Emp= " + EmpID + " :Branch=" + FwdBranch + " :TechRole=" + FwdPosition + " :Limit=" + FwdLimit + " :Term=" + FwdTerminal + " :Action=" + Action + " :NextBranch=" + RwdBranch + " :NextPosition=" + RwdPosition + " :NextLimit=" + RwdLimit + " :NextTerm=" + RwdTerminal + " :Complete=" + completeR + " :Checked=" + Checked + " :RequestID=" + RequestID);
+				}
+				if (debugging) System.out.println("MakeOutput1.class: Result from insertOutput2 is = " + flag);
+				//System.out.println("ApproveProcess.getData.inseartOutput1");
+				/* OLD LOGIC & CODE ********************************************* 
+//				boolean flag = false; 
+//				if (DoubleRecords.equals("Yes")) {
+					// Forward request
+					String CurPosOnFWD = "";
+					String CurLimitOnFWD = "";
+					String CurBranchOnFWD = "";
+					String CurTerminalOnFWD = "";
 					NewBranch = resultSet.getString("FwdBranch");
 					NewPosition = resultSet.getString("FwdPosition");
 					NewLimit = resultSet.getString("FwdLimit");
-					Action = "Forward";
+					if(BranchID.equals(NewBranch)){
+						Action = "Change";
+					}else{
+						Action = "Move";
+					}
 					Complete = resultSet.getString("CompleteF");
-				}else if(type.equals("B")){
+					data = convertBusToTecRole(EmpID,NewPosition,NewBranch,NewLimit);
+					NewPosition = data.get("role");
+					CurPosOnFWD = NewPosition;
+					NewLimit = data.get("limit");
+					CurLimitOnFWD = NewLimit;
+					NewTerminalID = getNewTerminal(EmpID,NewBranch);
+					CurBranchOnFWD = NewBranch;
+					CurTerminalOnFWD = NewTerminalID;
+					RequestID = resultSet.getString("RequestID") + "-1";
+					flag = insertOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,NewBranch,NewPosition,NewLimit,NewTerminalID,Mode,Complete,Checked,RequestID);
+					// Backward request
 					NewBranch = resultSet.getString("RevBranch");
 					NewPosition = resultSet.getString("RevPosition");
 					NewLimit = resultSet.getString("RevPosition");
-					Action = "Backward";
+					if(CurBranchOnFWD.equals(NewBranch)){
+						Action = "Change";
+					}else{
+						Action = "Move";
+					}
 					Complete = resultSet.getString("CompleteR");
-				}else if(type.equals("A")){
-					if(completeF.toUpperCase().equals("Y") && completeR.toUpperCase().equals("N")) { // forward done - show backward
-						NewBranch = resultSet.getString("RevBranch");
-						NewPosition = resultSet.getString("RevPosition");
-						NewLimit = resultSet.getString("RevPosition");
-						Action = "Backward";
-						Complete = resultSet.getString("CompleteR");						
-					} else {
-						if(completeF.toUpperCase().equals("N")) { // forward 
+					data = convertBusToTecRole(EmpID,NewPosition,NewBranch,NewLimit);
+					Mode = "Backward"; // set mode to Backward
+					Limit = CurLimitOnFWD;
+					BranchID = CurBranchOnFWD;
+					TerminalID = CurTerminalOnFWD;
+					TechnicalRole = CurPosOnFWD; // Tech role from forward request
+					NewPosition = data.get("role");
+					NewLimit = data.get("limit");
+					NewTerminalID = getNewTerminal(EmpID,NewBranch);
+					RequestID = resultSet.getString("RequestID") + "-2";
+					flag = flag && insertOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,NewBranch,NewPosition,NewLimit,NewTerminalID,Mode,Complete,Checked,RequestID);
+					System.out.println("MakeOutput1.class:StartProcessOutput2 - double records found");
+				} else {
+					if (DoubleRecords.equalsIgnoreCase("Maybe No")) {
+						String direction = "Forward";
+						SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd"); 
+						try {
+							Date SearchstartDate = (Date)formatter.parse(sDate);
+							Date SearchendDate = (Date)formatter.parse(eDate);
+							Date effStartDate = (Date)formatter.parse(resultSet.getString("EffStartDate"));
+							Date effEndDate = (Date)formatter.parse(resultSet.getString("EffEndDate"));
+							System.out.println("MakeOutput1.class: sDate=" + sDate + " eDate=" + eDate + " EffStart=" + resultSet.getString("EffStartDate") + " EffEnd=" + resultSet.getString("EffEndDate"));
+							
+							if (!(effStartDate.before(SearchstartDate) || effStartDate.after(SearchendDate))) {	// effstartdate in range
+								direction = "Forward";
+								System.out.println("MakeOutput1.class: (Maybe No) EffStartDate is in search range");
+								if (!(effEndDate.before(SearchstartDate) || effEndDate.after(SearchendDate))) { // effenddate in range
+									System.out.println("MakeOutput1.class: (Maybe No) EffEndDate is in search range");
+									direction = "Both";
+								} else {
+									System.out.println("MakeOutput1.class: (Maybe No) EffStartDate is in range but EffEndDate is out of range");
+								}
+							} else {
+								if (!(effEndDate.before(SearchstartDate) || effEndDate.after(SearchendDate))) { // effenddate in range
+									System.out.println("MakeOutput1.class: (Maybe No) EffEndDate is in search range");
+									direction = "Backward";
+								} else {
+									System.out.println("MakeOutput1.class: (Maybe No) Both EffStartDate and EffEndDate is out of range");
+								}
+							}
+						} catch (Exception e) {
+							DoubleRecords = "No";
+							System.out.println("MakeOutput1.class:StartProcessOutput2 - Exception in date transforms & comparison");
+						}
+						switch(direction) {
+						case "Forward":
 							NewBranch = resultSet.getString("FwdBranch");
 							NewPosition = resultSet.getString("FwdPosition");
 							NewLimit = resultSet.getString("FwdLimit");
-							Action = "Forward";
+							if(BranchID.equals(NewBranch)){
+								Action = "Change";
+							}else{
+								Action = "Move";
+							}
 							Complete = resultSet.getString("CompleteF");
+							data = convertBusToTecRole(EmpID,NewPosition,NewBranch,NewLimit);
+							NewPosition = data.get("role");
+							NewLimit = data.get("limit");
+							NewTerminalID = getNewTerminal(EmpID,NewBranch);
+							RequestID = resultSet.getString("RequestID");
+							break;
+						case "Backward":
+							NewBranch = resultSet.getString("RevBranch");
+							NewPosition = resultSet.getString("RevPosition");
+							NewLimit = resultSet.getString("RevLimit");
+							if(BranchID.equals(NewBranch)){
+								Action = "Change";
+							}else{
+								Action = "Move";
+							}
+							Complete = resultSet.getString("CompleteR");
+							data = convertBusToTecRole(EmpID,NewPosition,NewBranch,NewLimit);
+							NewPosition = data.get("role");
+							NewLimit = data.get("limit");
+							NewTerminalID = getNewTerminal(EmpID,NewBranch);
+							RequestID = resultSet.getString("RequestID");
+							break;
+						case "Both":
+							System.out.println("MakeOutput1.class: Get into BOTH switch condition - something goes wrong");
+							break;
 						}
-					}
-					
-				}
-				
-				Mode = Action;
-				Checked = Complete;
-				if(BranchID.equals(NewBranch)){
-					Action = "Change";
-				}else{
-					Action = "Move";
-				}
-				
-				System.out.println("output2:"+EmpID+":"+BranchID+":"+TechnicalRole+":"+Limit+" TerminalID :"+TerminalID+" Action :"+Action+":"+NewBranch+":"+NewPosition+":"+NewLimit+":"+Mode);
-				data = convertBusToTecRole(EmpID,NewPosition,NewBranch,NewLimit);
-				//System.out.println("behigh:"+data.get("role")+":"+data.get("limit"));
-				NewPosition = data.get("role");
-				NewLimit = data.get("limit");
-				
-				//System.out.println("ApproveProcess.getData.getNewTerminal");
-				NewTerminalID = getNewTerminal(EmpID,NewBranch);
-				String RequestID = resultSet.getString("RequestID");
-				System.out.println("RequestID " + RequestID);
-				//System.out.println("ApproveProcess.getData.inseartOutput1");
-				boolean flag = inseartOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,NewBranch,NewPosition,NewLimit,NewTerminalID,Mode,Complete,Checked,RequestID);
-			
+						flag = insertOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,NewBranch,NewPosition,NewLimit,NewTerminalID,Mode,Complete,Checked,RequestID);
+						System.out.println("MakeOutput1.class:StartProcessOutput2 - maybe double records");
+					} else {
+						flag = insertOutput2(EmpID,BranchID,TechnicalRole,Limit,TerminalID,Action,NewBranch,NewPosition,NewLimit,NewTerminalID,Mode,Complete,Checked,RequestID);
+						System.out.println("MakeOutput1.class:StartProcessOutput2 - not double records");
+					} 
+				} */
 			}			
 		
 		} catch (SQLException e) {
@@ -630,16 +973,17 @@ public class MakeOutput1 extends HttpServlet{
 			System.out.println("setOutput2 success.");
 			try { connect.close();	} catch (SQLException e) {	e.printStackTrace(); }
 		}
+		System.out.flush();
 	}
 	
-	public boolean inseartOutput2(String EmpID,String BranchID,String TechnicalRole,String Limit,String TerminalID
+	public boolean insertOutput2(String EmpID,String BranchID,String TechnicalRole,String Limit,String TerminalID
 			,String Action,String NewBranch,String NewPosition,String NewLimit,String NewTerminalID,String Mode,String Complete, String Checked, String RequestID){
 		Connection connect = null;
 		PreparedStatement preparedStatement = null;
 		connect = DatbaseConnection.getConnectionMySQL();
 		boolean flag =true;
 	      try {
-			preparedStatement = connect
+	    	  preparedStatement = connect
 			      .prepareStatement("insert into  tbldt_output2(UserID, CurBr, CurPos, CurLimit, TermID, Action, NewBr, NewPos, NewLimit, NewTermID, ModeOutput, Complete, Checked, RequestID) values ( ?, ?, ?, ?, ? , ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			
 			  preparedStatement.setString(1, EmpID);
@@ -663,7 +1007,7 @@ public class MakeOutput1 extends HttpServlet{
 			} catch (SQLException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				System.out.println("Exception inseartOutput1:"+e.getMessage());
+				System.out.println("Exception insertOutput2:"+e.getMessage());
 				flag = false;
 			}finally{
 				try {	connect.close();} catch (SQLException e) {	}			

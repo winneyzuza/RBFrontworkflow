@@ -1,8 +1,13 @@
 package db;
 
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.jasypt.encryption.pbe.StandardPBEStringEncryptor;
+
+import com.mysql.jdbc.Statement;
 
 import java.sql.Connection;
 
@@ -17,6 +22,21 @@ public class DatbaseConnection {
 	
 	public DatbaseConnection() {
 
+	}
+	
+	public static Connection localConnect() throws SQLException, ClassNotFoundException {
+		String driverName = "com.mysql.jdbc.Driver";
+	    Class.forName(driverName);
+
+	    String serverName = "localhost";
+	    String mydatabase = "rbfworkflow";
+	    String url = "jdbc:mysql://" + serverName + "/" + mydatabase; 
+
+	    String username = "root";
+	    String password = "";
+	    Connection connection = DriverManager.getConnection(url, username, password);
+	    
+	    return connection;
 	}
 	
 	public static Connection getConnectionMySQL()
@@ -47,13 +67,36 @@ public class DatbaseConnection {
 			
 			String host ="";
 			String dbname ="";
+			System.out.println("flagCon " + flagCon);
 			if(flagCon.equals("DEV")){
-				host = Configuration.hostnameDB;
-				con = DriverManager.getConnection("jdbc:mysql://"+host+"/scb?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");	
+				//host = Configuration.hostnameDB;
+				//con = DriverManager.getConnection("jdbc:mysql://"+host+"/scb?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");
+				String driverName = "com.mysql.jdbc.Driver";
+			    Class.forName(driverName);
+
+			    String serverName = "localhost";
+			    String mydatabase = "rbfworkflow";
+			    String url = "jdbc:mysql://" + serverName + "/" + mydatabase; 
+
+			    String username = "root";
+			    String password = "";
+			    Connection connection = DriverManager.getConnection(url, username, password);
+			    con = connection;
 			}else if(flagCon.equals("SIT")){
-				host = Configuration.hostnameDB;
+				/*host = Configuration.hostnameDB;
 				dbname = Configuration.dbnameRB;
-				con = DriverManager.getConnection("jdbc:mysql://"+host+"/"+dbname+"?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");
+				con = DriverManager.getConnection("jdbc:mysql://"+host+"/"+dbname+"?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");*/
+				String driverName = "com.mysql.jdbc.Driver";
+			    Class.forName(driverName);
+
+			    String serverName = "localhost";
+			    String mydatabase = "rbfworkflow";
+			    String url = "jdbc:mysql://" + serverName + "/" + mydatabase; 
+
+			    String username = "root";
+			    String password = "";
+			    Connection connection = DriverManager.getConnection(url, username, password);
+			    con = connection;
 			}else if(flagCon.equals("UAT")){
 				host = Configuration.hostnameDB;
 				dbname = Configuration.dbnameRB;
@@ -75,8 +118,8 @@ public class DatbaseConnection {
 	}
 	
 	
-	public static void main(String [ ] args){
-		
+	public static void main(String [ ] args) throws ClassNotFoundException, SQLException{
+		/*
 		String pass = "lk2b9i63";
 		
 		StandardPBEStringEncryptor encryptor = new StandardPBEStringEncryptor();
@@ -86,7 +129,30 @@ public class DatbaseConnection {
 		
 		String decrypted = encryptor.decrypt(encrypted);
 		System.out.println("deC:"+decrypted);
+		*/
 		
+		Connection connect = DatbaseConnection.localConnect();
+		try {
+			String module="";
+			PreparedStatement preparedStatement = connect
+			          .prepareStatement("select * from tblmt_authen a where a.EmpID like ? ");
+			preparedStatement.setString(1, "iambaycoms");
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			//System.out.println("checkBranch result: "+resultSet.getInt(1));
+			while( resultSet.next()){
+				module = module+resultSet.getString("Module");
+			}
+			System.out.println("Module:"+module);			
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
 	}
 	
 	

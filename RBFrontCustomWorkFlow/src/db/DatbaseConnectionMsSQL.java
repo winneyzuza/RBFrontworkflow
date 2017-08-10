@@ -55,8 +55,20 @@ public class DatbaseConnectionMsSQL {
 			String dbName = "";
 			
 			if(flagCon.equals("DEV") ){
-				Class.forName("com.mysql.jdbc.Driver");
-				con = DriverManager.getConnection("jdbc:mysql://localhost:3306/tempscbmssql?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");
+				//Class.forName("com.mysql.jdbc.Driver");
+				//con = DriverManager.getConnection("jdbc:mysql://localhost:3306/tempscbmssql?useSSL=false&user="+user+"&password="+pass+"&useUnicode=true&characterEncoding=UTF-8");
+				
+				String driverName = "com.mysql.jdbc.Driver";
+			    Class.forName(driverName);
+
+			    String serverName = "localhost";
+			    String mydatabase = "rbfworkflow";
+			    url = "jdbc:mysql://" + serverName + "/" + mydatabase; 
+
+			    String username = "root";
+			    password = "";
+			    Connection connection = DriverManager.getConnection(url, username, password);
+			    con = connection;
 			}else if(flagCon.equals("SIT") ){
 //				System.out.println("MsSQL");
 				
