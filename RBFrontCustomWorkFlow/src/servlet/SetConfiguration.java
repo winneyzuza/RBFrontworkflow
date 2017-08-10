@@ -28,6 +28,7 @@ public class SetConfiguration extends HttpServlet {
 			Configuration.setConfigFromFile();
 			Configuration.getSuperUser();
 			Configuration.setConfig();
+			System.out.println("SetConfiguration: Init Successful");
 	    }
 	 
 	protected void doGet(HttpServletRequest request,HttpServletResponse response) throws ServletException, IOException 
