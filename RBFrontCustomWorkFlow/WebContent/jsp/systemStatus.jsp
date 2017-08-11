@@ -201,6 +201,11 @@ public String getCheckBox(String Y){
 				"where t.Module in ('ManualMakeOutput1') "+
 				"order by t.DateTime desc "+
 				"limit 1) "+
+				"union "+
+				"(select PKey,sysdate(),t.Module,CONCAT(t.Desc, ' by user: ', t.usermodified),t.Status,t.DateTime from tbldt_auditlog t "+
+				"where t.Module in ('UpdateOutput1') "+
+				"order by t.DateTime desc "+
+				"limit 1) "+
 				"union "+				
 				"(select PKey,sysdate(),t.Module,t.Desc,t.Status,t.DateTime from tbldt_auditlog t "+
 				"where t.Module in ('AutoUploadUserlist3') "+
@@ -226,7 +231,17 @@ public String getCheckBox(String Y){
 				"union "+
 				"(select PKey,sysdate(),t.Module,t.Desc,t.Status,t.DateTime ed from tbldt_auditlog t "+
 				"where t.Status like 'ET' and t.DateTime between DATE_ADD(CURDATE(),INTERVAL -1 DAY) and DATE_ADD(CURDATE(),INTERVAL 1 DAY) "+
-				"order by t.DateTime desc) ";
+				"order by t.DateTime desc) "+
+				"union "+
+				"(select PKey,sysdate(),t.Module,t.Desc,t.Status,t.DateTime from tbldt_auditlog t "+
+				"where t.Module in ('AreaUpload') "+
+				"order by t.DateTime desc "+
+				"limit 1) "+
+				"union "+
+				"(select PKey,sysdate(),t.Module,t.Desc,t.Status,t.DateTime from tbldt_auditlog t "+
+				"where t.Module in ('NetworkUpload') "+
+				"order by t.DateTime desc "+
+				"limit 1) ";
 		
 		preparedStatement = connect
 		          .prepareStatement(sql);
