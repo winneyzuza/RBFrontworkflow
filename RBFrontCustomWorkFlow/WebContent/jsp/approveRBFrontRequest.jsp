@@ -32,7 +32,9 @@ $(function(){
 	$("#start_d,#stop_d").on("contextmenu",function(e){
         return false;
     });	
-
+	
+	 //$("#closejob").attr('disabled','disabled');
+	 
 
 });
 
@@ -56,7 +58,6 @@ $(document).ready(function(){
 	 $("#btSearch").on("click", function() {
 	        $(this).attr("disabled", "disabled");
 	 });
-
 });
 
 </script>
@@ -150,8 +151,8 @@ function initValue(){
 					$("#hstop_d").attr("value", stop_d);
 					$("#hselectType").attr("value", selectType);
 					$("#hselectComplete").attr("value", selectComplete);
-					
 					mainForm.submit();
+					//$("#closejob").removeAttr("disabled");
 				}
 			}
 		}
@@ -214,8 +215,9 @@ function initValue(){
 				return "selected";	
 		}
 		return "";
-	} 
+	}
 	
+
 %>
 <body>
 
@@ -285,8 +287,6 @@ function initValue(){
 			resultSet = preparedStatement.executeQuery();
 		}
 		
-			
-
 %>
 
 <div id="container">
@@ -373,6 +373,8 @@ function initValue(){
 						out.println("Closed Job with users " + session.getAttribute("userIDs")+"<br>");
 					if( "cje".equals(session.getAttribute("module")) )
 						out.println("Closed Job error<br>");
+					if( "cancel".equals(session.getAttribute("module")) )
+						out.println("ดึงรายการไม่สำเร็จ กรุณาระบุ New Terminal ให้ครบถ้วน<br>");
 					
 					session.removeAttribute("module");
 					%>
@@ -396,7 +398,7 @@ function initValue(){
 					  </tr>
 					  		<%  int i =0;
 					  		if(null != resultSet){
-					  			if(!read){
+					  			if(!read){ 
 									String newterm = "";
 								  	while(resultSet.next() ) {
 									  	i++;
@@ -418,11 +420,12 @@ function initValue(){
 									  	// new code start - add new String "outmode" & "rem" & "newterm" var
 									  	System.out.flush();
 									  	newterm = (!"".equals(resultSet.getString("NewTermID"))) ?  resultSet.getString("NewTermID").trim() : newterm;
+									  	
 									  	out.println("<td class=\"tbl_row1\" ><input " + checkRed2(newterm) + " class=\"txt1\" name=\"NewTermID"+i+"\" type=\"text\" value=\""+newterm+"\" size=\"10\"  /></td>");
 									  	// new code end
 									  	out.println("<td class=\"tbl_row1\" ><input class=\"txt1\" name=\"Mode"+i+"\" type=\"text\" value=\""+resultSet.getString("ModeOutput")+"\" size=\"10\"  /></td>");
 									  	out.println("<td class=\"tbl_row1\" align=\"center\" ><input class=\"txt1\" id=\"CheckBoxComplete"+i+"\" name=\"CheckBoxComplete"+i+"\" type=\"checkbox\" value=\"Y\" "+getCheckBox(resultSet.getString("Complete"))+" /></td>");
-									  	
+									  	newterm = "";
 									  	/* out.println("<td class='tbl_row1'" + ">"+ 
 									  			"<input class='txt1'" + "style='background-color:#f3defc'"+ "name=Checked"+i+ " "+ "value="+resultSet.getString("Checked") + " type=checkbox"  + " "+ ("Y".equals(resultSet.getString("Checked"))?"checked": "") + " " + "onclick=toggleCheckbox(this)" +  ">" 
 									  			+"</td></tr>");	 */
@@ -431,7 +434,7 @@ function initValue(){
 					  				
 					  			}else{
 									String newterm = "";
-
+									
 					  				while(resultSet.next() )
 										  { i++;
 										    %><input type="hidden"  name="reqID<%=i %>" value="<%=resultSet.getString("RequestID")%>"><%
@@ -452,7 +455,7 @@ function initValue(){
 											newterm = (!"".equals(resultSet.getString("NewTermID"))) ?  resultSet.getString("NewTermID").trim() : newterm;
 										  	out.println("<td class=\"tbl_row1\" ><input " + checkRed2(newterm) + " class=\"txt1\" name=\"NewTermID"+i+"\" type=\"text\" value=\""+newterm+"\" size=\"10\"  /></td>");
 									  	// new code end
-
+											newterm = "";
 											out.println("<td class=\"tbl_row1\" ><input class=\"txt1\" style=\"background-color:#f3defc\" name=\"Mode"+i+"\" type=\"text\" value=\""+resultSet.getString("ModeOutput")+"\" size=\"10\" readonly  /></td>");
 										//  	out.println("<td class=\"tbl_row1\" align=\"center\" ><input class=\"txt1\" style=\"background-color:#f3defc\" name=\"Mode"+i+"\" type=\"text\" value=\""+resultSet.getString("Complete")+"\" size=\"10\" readonly  /></td>");
 											out.println("<td class=\"tbl_row1\" align=\"center\" ><input class=\"txt1\" id=\"CheckBoxComplete"+i+"\" name=\"CheckBoxComplete"+i+"\" type=\"checkbox\" value=\"Y\" "+getCheckBox(resultSet.getString("Complete"))+" /></td>");
@@ -493,7 +496,7 @@ function initValue(){
 						<td colspan="12">
 						  
 							<div align="center">
-							  <input class="btn1" type="submit" id="closejob" name="Submit3" value="Close Job" onClick="doSubmit('closejob')" />							   				  
+							  <input class="btn1" type="submit" id="closejob" name="Submit3" value="Close Job" onClick="doSubmit('closejob')"  />							   				  
 							</div>
 						</td>
 					   </tr>
