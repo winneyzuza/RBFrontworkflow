@@ -34,6 +34,7 @@
 		ResultSet resultSet = preparedStatement.executeQuery();
 		
 		path = Configuration.getParam("PathOutput1");		
+		//path = "c:/temp/";
 		filename = Configuration.getParam("FileNameOutput1");
 		String file = path+filename;
 		FileWriter writer = new FileWriter(file, false);
@@ -46,7 +47,7 @@
 		String Action = "";
 		String NewTerminalID = "";
 		String EmpID = "";
-		
+		boolean isTerminalEmpty = false;
 		try{
 			writer.write("'UserID'	'CurBr'	'Curpos'	'Limit'	'TermID'	'Action'	'NewBr'	'NewPos'	'NewLimit'	'NewTermID'	'Mode' \n");
 			while(resultSet.next()){
@@ -81,20 +82,31 @@
 			
 			//NewTerminalID = op1.getNewTerminal(EmpID,NewBranch);
 			NewTerminalID = resultSet.getString("NewTermID");
+			System.out.println(">>>>>>>>>>> NewTerminalID >>>>>>" + NewTerminalID);
 			if (NewTerminalID.equals("")) {
 				System.out.println(">> Blank Terminal ID <<");
 				NewTerminalID = op1.getNewTerminal(EmpID, NewBranch);
+				if(NewTerminalID.equals(""))
+					isTerminalEmpty = true;
+			}
+			
+			if(isTerminalEmpty){
+				String rqtype = request.getParameter("SelectType");
+				String rqcomplete = request.getParameter("SelectComplete");		
+				response.sendRedirect("approveRBFrontRequest.jsp?attrib=update&EffStartDateS="+request.getParameter("EffStartDateS").trim()+"&EffStartDateE="+request.getParameter("EffStartDateE").trim()+"&SelectType="+rqtype.trim()+"&SelectComplete="+rqcomplete.trim());
+				session.setAttribute("module", "cancel");
+				
 			}
 			NewBranch = resultSet.getString("NewBr");
 			NewPosition = resultSet.getString("NewPos");
 			NewLimit = resultSet.getString("NewLimit");
-			
+			String TermID = resultSet.getString("TermID");
 			System.out.println(">>>>>>>>>>>>>>> Export EmpID " + EmpID + " compare " + BranchID.equals(NewBranch));
 			
 			//System.out.println(resultSet.getString("UserID")+","+resultSet.getString("CurBr")+","+resultSet.getString("Curpos"));
 			info = info+"'"+resultSet.getString("UserID")+"'\t'"+resultSet.getString("CurBr")+"'\t'"+resultSet.getString("Curpos")+"'\t'"
-				 + resultSet.getString("CurLimit")+"'\t'"+NewTerminalID+"'\t'"+Action+"'\t'"
-				 + NewBranch+"'\t'"+NewPosition+"'\t'"+NewLimit+"'\t'"
+				 + resultSet.getString("CurLimit")+"'\t'"+TermID+"'\t'"+Action+"'\t'"
+				 + NewBranch+"'\t'"+NewPosition+"'\t'"+NewLimit+"'\t'"+NewTerminalID+"'\t'"
 				 + Mode+"'\n";
 		}
 		
@@ -162,3 +174,4 @@
     	al.insertAuditLog();
     }
 %>
+
