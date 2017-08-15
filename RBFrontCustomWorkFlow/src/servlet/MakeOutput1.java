@@ -818,7 +818,7 @@ public class MakeOutput1 extends HttpServlet{
 					}else{
 						Action = "Move";
 					}
-					if (FwdPublish) RequestID = RequestID + "-2"; // if forward request will be publish too need to distinguish by add -2
+					if (FwdPublish) RequestID = RequestID.replace("-1", "") + "-2"; // if forward request will be publish too need to distinguish by add -2
 					Checked = completeR;
 					if (completeF.equalsIgnoreCase("Y")) {
 						if (debugging) System.out.println("Rwd1 RequestID " + RequestID);
