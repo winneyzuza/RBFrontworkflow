@@ -123,14 +123,15 @@ public class RequestApprover {
 			flag = flag && insertRequestApproverRq();
 					
 			System.out.println("setApprover");
-			flag = flag && processApprover();
+			flag = flag && processApprover(); System.out.println("processApprover()  >> " + processApprover() + " flag " + flag);
 			msgError = "ไม่สามารถอนุมัติคำขอได้เนื่องจากผิดกฎในการระบุตัวผู้อนุมัติ (Cannot identify approver)";
 			
 			System.out.println("setVerifyAO NW");
-			flag = flag && setVerify();
+			flag = flag && setVerify(); System.out.println("setVerify() flag >> " + setVerify() + " flag " + flag);
 			
 			System.out.println("updateReqRepository");
 			flag = flag && updateReqRepository();
+			
 			
 			 RequestApproverRes rar = returnRequestApproverRes();
 			 if(rar.getApproverEmpID1().equals("AveksaAdmin")){
@@ -203,13 +204,23 @@ public class RequestApprover {
 		
 		ReqRepository rpstr = new ReqRepository();
 		rpstr.setRepsitoryByRef(rq.getRefNo());
-			
+		
+		System.out.println("code " + rpstr.getCode() + "  Remark " + rpstr.getRemark() + " RefNo " + rq.getRefNo());
+		
 		if(rpstr.getCode().equals("000")){
+			System.out.println("rpstr.getCode() 0 " + rpstr.getCode());
 			rs.setRefNo(rpstr.getRequestID());
+			System.out.println("rpstr.getCode() 1 " + rpstr.getCode());
 			
 			boolean AdminSystem = Authen.isAdmin(rq.getEmpID());
+			
+			
+		
 			if(!AdminSystem){
+				System.out.println(" AdminSystem  >> " + AdminSystem); 
+				
 				String rsMoveBranch = checkMoveBranch(rpstr);
+				
 				String typeApprove;
 				String typeApproveF = getTypeApprove(rpstr.getFwdPosition(),rpstr.getEmpID(),rpstr.getRequestor());
 				System.out.println("processApprover():typeApproveF:"+typeApproveF);
@@ -243,7 +254,11 @@ public class RequestApprover {
 					rs.setApproverLevel3("EVP");
 					rs.setApproverEmpID3(approverEVP);
 				}					
-			}										
+				System.out.println("typeApprove "+ typeApprove);
+			}	else {
+				
+				System.out.println("Adnin "+ AdminSystem);
+			}									
 							
 		}else{
 			rs.setRefNo("NA");
@@ -503,7 +518,7 @@ public class RequestApprover {
 			  				
 			  PreparedStatement preparedStatement = connect
 		          .prepareStatement("insert into  tbldt_wsrequestapproverrs values ( ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
+			  
 		      preparedStatement.setString(1, seq);
 		      preparedStatement.setString(2, sdf.format(curDate));
 		      preparedStatement.setString(3, rs.getRefNo());
@@ -518,8 +533,24 @@ public class RequestApprover {
 		      preparedStatement.setString(12, rs.getErrorMsg());
 		      preparedStatement.setString(13, rs.getEscalation());
 		      
+		      System.out.println("\n*** seq = " + seq + "\n");
+		      System.out.println("\n*** sdf.format(curDate) = " + sdf.format(curDate) + "\n");
+		      System.out.println("\n*** rs.getRefNo() = " + rs.getRefNo() + "\n");
+		      System.out.println("\n*** rs.getApproverLevel1() = " + rs.getApproverLevel1() + "\n");
+		      System.out.println("\n*** rs.getApproverEmpID1() = " + rs.getApproverEmpID1() + "\n");
+		      System.out.println("\n***  rs.getApproverLevel2() = " +  rs.getApproverLevel2() + "\n");
+		      System.out.println("\n***  rs.getApproverEmpID2() = " +  rs.getApproverEmpID2() + "\n");
+		      System.out.println("\n*** rs.getApproverLevel3() = " + rs.getApproverLevel3() + "\n");
+		      System.out.println("\n*** rs.getApproverEmpID3() = " + rs.getApproverEmpID3() + "\n");
+		      System.out.println("\n*** rs.getVerifyUserAO().toString() = " + rs.getVerifyUserAO().toString() + "\n");
+		      System.out.println("\n*** rs.getVerifyUserNO().toString() = " + rs.getVerifyUserNO().toString() + "\n");
+		      System.out.println("\n*** rs.getErrorMsg()= " + rs.getErrorMsg() + "\n");
+		      System.out.println("\n*** rs.getEscalation()= " + rs.getEscalation() + "\n");
+		      
+		      
 		      preparedStatement.executeUpdate();
 		      
+		      System.out.println("returnRequestApproverRes statement >>  "  + preparedStatement);
 			}catch(Exception ex){
 				rs.setErrorMsg("returnRequestApproverRes:"+ex.getMessage());
 			}finally{
@@ -533,6 +564,12 @@ public class RequestApprover {
 		String boundary = "";
 		String sfwdEffDate = "";
 		String srevEffDate = "";
+		
+		System.out.println(" rps.getFwdDiff() >>" + rps.getFwdDiff());
+		System.out.println(" rps.getRevDiff() >>" + rps.getRevDiff());
+		
+		
+		 
 		if(null == rps.getFwdDiff()){
 			sfwdEffDate = "9999";
 		}else{
@@ -545,21 +582,24 @@ public class RequestApprover {
 			srevEffDate = rps.getRevDiff();
 		}
 		
+		System.out.println("1 sfwdEffDate " + sfwdEffDate + " srevEffDate " + srevEffDate + " rps.getCompleteF() " + rps.getCompleteF());
 		
 		int fwdEffDate = Integer.parseInt(sfwdEffDate) ;
 		int revEffDate = Integer.parseInt(srevEffDate);
+		System.out.println("2 sfwdEffDate " + sfwdEffDate + " srevEffDate " + srevEffDate + " rps.getCompleteF() " + rps.getCompleteF());
 		Locale lc = new Locale("en","US");
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",lc);
 		String chkBranch = "";
 		String curBranch = rps.getCurBranch();
 		String result="BM";
 		
-		
+		System.out.println("1 chkBranch " + chkBranch + " rps.getFwdBrandch() " + rps.getFwdBrandch() + " rps.getRevBranch() " + rps.getRevBranch());
 		if(fwdEffDate < 1 && rps.getCompleteF().equals("N")){
 			chkBranch = rps.getFwdBrandch();
 		}else if(revEffDate < 1 && rps.getCompleteF().equals("Y")){
 			chkBranch = rps.getRevBranch();
 		}
+		System.out.println("2 chkBranch " + chkBranch);
 		System.out.println("RequestApprover:CheckMoveBranch start");
 		System.out.println("ReqID : " + rps.getRequestID());
 		System.out.println("CurrentDate : " + sdf.format(new Date()));
@@ -851,7 +891,7 @@ public class RequestApprover {
 			preparedStatement.setString(1, AO);
 			preparedStatement.setString(2, Configuration.getParam("verifyAO"));
 			
-//			System.out.println("preparedStatement:"+preparedStatement);
+			System.out.println("preparedStatement: setVerifyUserAO  "+preparedStatement);
 			
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
