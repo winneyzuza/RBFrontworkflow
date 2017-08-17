@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -14,12 +12,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-
-
 import db.DatbaseConnection;
 import db.DatbaseConnectionMsSQL;
 import mt.EmployeeInfo;
@@ -28,7 +23,6 @@ import mt.NormalFunction;
 import mt.ReqRepository;
 import db.ControlSequenceTable;
 import res.FormValidateRes;
-import servlet.AuditLog;
 import validate.ProcessCA;
 import validate.ProcessGroup;
 import validate.ProcessNumRole;
@@ -82,75 +76,95 @@ public class FormValidate {
 			data.put("RevBranch", req.getParameter("RevBranch").trim());
 			data.put("RequestorID", req.getParameter("RequestorID").trim());
 			data.put("Escalation", req.getParameter("Escalation"));
-			System.out.println("\n*** Requestor ID = " + req.getParameter("RequestorID") + "\n");
+			
+			
+			
+			System.out.println("\n*** Requestor ID = " + data.get("RequestorID") + "\n");
+			System.out.println("\n** EmpID = " + data.get("EmpID") + "\n");
+			System.out.println("\n** EmpJobTitle  = " + data.get("EmpJobTitle") + "\n");
+			System.out.println("\n** FwdEffectiveStartDate = " + data.get("FwdEffectiveStartDate") + "\n");
+			System.out.println("\n** FwdEffectiveEndDate = " + data.get("FwdEffectiveEndDate") + "\n");
+			System.out.println("\n** FwdPosition = " + data.get("FwdPosition") + "\n");
+			System.out.println("\n** FwdBranch = " + data.get("FwdBranch") + "\n");
+			System.out.println("\n** FwdLimit = " + data.get("FwdLimit") + "\n");
+			System.out.println("\n** RevPosition = " + data.get("RevPosition") + "\n");
+			System.out.println("\n** Escalation = " + data.get("Escalation") + "\n");
+			
 			setValidateReq(data);
 			//printTest(data);
-			printTest2();
+			//printTest2();
+			boolean checkBranchValid = false;
+			checkBranchValid = checkValidateBranch(data);
 			
-			boolean flag = true;
-		
-			System.out.println(flag+" insertFormValidagteRq");
-			flag = flag && insertFormValidateRq(data);
-			
-			System.out.println(flag+" validate");
-			flag = flag && validate(rq);
-			
-			System.out.println(flag+" check vacation/leave day");
-			flag = flag && weekendDay(rq);
-			
-			System.out.println(flag+" check holiday");
-			flag = flag && holiDay(rq);
-			
-			//System.out.println("dumpReq");
-			//flag = flag && dumpReq(rq);									
-			
-			System.out.println(flag+" check CA");
-			ProcessCA processCA = new ProcessCA();
-			flag = flag & processCA.checkCA(rq);
-			if(!flag){
-				msgError = msgError + processCA.getMsgError();			
-			}else{
-				this.approver = NormalFunction.chooseApprover(this.approver, processCA.getApprover());
-			}
-			
-			System.out.println(flag+" validate checkNumRole");
-			ProcessNumRole processNumR = new ProcessNumRole();
-			flag = flag & processNumR.checkNumRole(rq);
-			if(!flag){
-				msgError = msgError + processNumR.getMsgError();			
-			}else{
-				this.approver = NormalFunction.chooseApprover(this.approver, processNumR.getApprover());
-			}
-			
-			System.out.println(flag+" validate checkGroup");
-			ProcessGroup processGroup = new ProcessGroup();
-			flag = flag & processGroup.checkGroup(rq);
-			if(!flag){
-				msgError = msgError + processGroup.getMsgError();				
-			}else{
-				this.approver = NormalFunction.chooseApprover(this.approver, processGroup.getApprover());
-			}			
-			
-			System.out.println(flag+" insertReqRepository");
-			flag = flag & insertReqRepository(flag);			  
-			
-			/////////// Appprover //////////
-			System.out.println(flag+" Approver validation start");
-			RequestApprover ra = new RequestApprover();
-			flag = flag & ra.mainRequestApprover(data.get("EmpID"),this.refNo,rq.getEscalation());
-			
-			if(!flag){
-				msgError = msgError + ra.getMsgError();				
-			}
-			
-			if(!flag){
-				rs.setRefNo("ERR");
-				rs.setErrorMsg("ผลการตรวจสอบพบข้อผิดพลาด (ERROR):"+msgError);
+			if(!checkBranchValid) {
+				rs.setErrorMsg("ไม่สามารถขอ request ข้ามสาขาได้");
+				//return returnFormValidateRes();
+			}else {
+				boolean flag = true;
+				
+				System.out.println(flag+" insertFormValidagteRq");
+				flag = flag && insertFormValidateRq(data);
+				
+				System.out.println(flag+" validate");
+				flag = flag && validate(rq);
+				
+				System.out.println(flag+" check vacation/leave day");
+				flag = flag && weekendDay(rq);
+				
+				System.out.println(flag+" check holiday");
+				flag = flag && holiDay(rq);
+				
+				//System.out.println("dumpReq");
+				//flag = flag && dumpReq(rq);									
+				
+				System.out.println(flag+" check CA");
+				ProcessCA processCA = new ProcessCA();
+				flag = flag & processCA.checkCA(rq);
+				if(!flag){
+					msgError = msgError + processCA.getMsgError();			
+				}else{
+					this.approver = NormalFunction.chooseApprover(this.approver, processCA.getApprover());
+				}
+				
+				System.out.println(flag+" validate checkNumRole");
+				ProcessNumRole processNumR = new ProcessNumRole();
+				flag = flag & processNumR.checkNumRole(rq);
+				if(!flag){
+					msgError = msgError + processNumR.getMsgError();			
+				}else{
+					this.approver = NormalFunction.chooseApprover(this.approver, processNumR.getApprover());
+				}
+				
+				System.out.println(flag+" validate checkGroup");
+				ProcessGroup processGroup = new ProcessGroup();
+				flag = flag & processGroup.checkGroup(rq);
+				if(!flag){
+					msgError = msgError + processGroup.getMsgError();				
+				}else{
+					this.approver = NormalFunction.chooseApprover(this.approver, processGroup.getApprover());
+				}			
+				
+				System.out.println(flag+" insertReqRepository");
+				flag = flag & insertReqRepository(flag);			  
+				
+				/////////// Appprover //////////
+				System.out.println(flag+" Approver validation start");
+				RequestApprover ra = new RequestApprover();
+				flag = flag & ra.mainRequestApprover(data.get("EmpID"),this.refNo,rq.getEscalation());
+				
+				if(!flag){
+					msgError = msgError + ra.getMsgError();				
+				}
+				
+				if(!flag){
+					rs.setRefNo("ERR");
+					rs.setErrorMsg("ผลการตรวจสอบพบข้อผิดพลาด (ERROR):"+msgError);
 
-			}else{
-				rs.setErrorMsg("000=OK");				
+				}else{
+					rs.setErrorMsg("000=OK");				
+				}
+				
 			}
-			
 		}catch(Exception ex){
 			this.msgError = this.msgError+" parameter not complete. ";
 			ex.printStackTrace();
@@ -158,7 +172,7 @@ public class FormValidate {
 		}  
 		finally{	
 			
-		return returnFormValidateRes();
+			return returnFormValidateRes();
 		}
 	}	
 	
@@ -204,6 +218,197 @@ public class FormValidate {
 		*/
 	}
 	
+	public static List<String>  getBranchListByRegionId(String regionid) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		List<String> branchList = new ArrayList<String>();
+	
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT OcCode FROM tblmt_branchinfo WHERE network LIKE ? ");
+			preparedStatement.setString(1, regionid);
+			
+			System.out.println(" getBranchListByRegionId regionid : " + regionid + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			while(resultSet.next()){
+				String oc_code = resultSet.getString("OcCode");
+				System.out.println(" getBranchListByRegionId oc_code " + oc_code);
+				branchList.add(oc_code);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return branchList;
+	}
+
+	public static List<String> getBranchListByAreaId(String areaid) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		
+		List<String> branchList = new ArrayList<String>();
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT OcCode FROM tblmt_branchinfo WHERE areano = ? ");
+			preparedStatement.setString(1, areaid);
+			
+			System.out.println(" getBranchListByAreaId areaid : " + areaid + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			while(resultSet.next()){
+				String oc_code = resultSet.getString("OcCode");
+				branchList.add(oc_code);
+				System.out.println(" getBranchListByAreaId OC_CODE " + oc_code);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return branchList;
+	}
+	
+	public String getNetworkidByOrganNameTH(String organName) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		String reqData ="";
+	
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT regionid FROM tbldt_regionlist WHERE regionname LIKE ? ");
+			preparedStatement.setString(1, organName);
+			
+			System.out.println(" getNetworkByOrganNameTH organName : " + organName + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()){
+				reqData =   resultSet.getString("regionid");   
+				System.out.println(" getNetworkidByOrganNameTH regionid = " + reqData);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return reqData;
+	}
+	
+	
+	public static String getAreaCodeByOrganNameTH(String organName) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		String reqData ="";
+	
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT areaid FROM tbldt_arealist WHERE areaname LIKE ? ");
+			preparedStatement.setString(1, organName);
+			
+			System.out.println(" getAreaCodeByOrganNameTH organName : " + organName + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			if(resultSet.next()){
+				reqData =   resultSet.getString("areaid");   
+				System.out.println(" getAreaCodeByOrganNameTH AreaID = " + reqData);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return reqData;
+	}
+	
+	public HashMap<String, String> getInfoByEmployee(String empID) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		HashMap<String,String> reqData = new HashMap<String,String>();
+	
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT OC_CODE, OC_TYPE, ORGANIZATION_NAME_TH FROM iam WHERE employeeID  = ? ");
+			preparedStatement.setString(1, empID);
+			
+			System.out.println(" getInfoByEmployee empID : " + empID + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			while(resultSet.next()){
+				reqData.put("OC_CODE", resultSet.getString("OC_CODE"));
+				System.out.println("getInfoByEmployee " + reqData.get("OC_CODE"));
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return reqData;
+	}
+	
+	public HashMap<String, String> getInfoByRequestor(String reqID) {
+		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		PreparedStatement preparedStatement;
+		HashMap<String,String> reqData = new HashMap<String,String>();
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT OC_CODE, OC_TYPE, ORGANIZATION_NAME_TH FROM iam WHERE employeeID  = ? ");
+			preparedStatement.setString(1, reqID);
+			
+			System.out.println(" getInfoByRequestor reqID : " + reqID + " " + preparedStatement);
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			while(resultSet.next()){
+				reqData.put("OC_CODE", resultSet.getString("OC_CODE"));
+				reqData.put("OC_TYPE", resultSet.getString("OC_TYPE"));
+				reqData.put("ORGANIZATION_NAME_TH", resultSet.getString("ORGANIZATION_NAME_TH"));
+				
+				System.out.println("getInfoByRequestor " + reqData.get("OC_CODE"));
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return reqData;
+	}
+	
 	public void setValidateReq(HashMap<String,String> data) throws ParseException
 	{     
         
@@ -222,7 +427,54 @@ public class FormValidate {
 		
 	}
 	
-	
+	public boolean checkValidateBranch(HashMap<String,String> data) {
+		HashMap<String,String> empData = getInfoByEmployee(data.get("EmpID"));
+		HashMap<String,String> reqData = getInfoByRequestor(data.get("RequestorID"));
+		
+		String req_oc_type = reqData.get("OC_TYPE");
+		String req_organNameTH = reqData.get("ORGANIZATION_NAME_TH");
+		String req_oc_code = reqData.get("OC_CODE");
+		String emp_oc_code = empData.get("OC_CODE");
+		
+		boolean flagvalid = false;
+		
+		if(req_oc_type.equalsIgnoreCase("Branch")) {
+			if(req_oc_code.equals(emp_oc_code)) {
+				flagvalid = true;
+			}else {
+				flagvalid = false;
+			}
+			return flagvalid;
+			
+		}else if(req_oc_type.equalsIgnoreCase("Area")) {
+			String areaid = getAreaCodeByOrganNameTH(req_organNameTH);
+			List<String> branchAreaData = getBranchListByAreaId(areaid);
+			
+			for(String branch: branchAreaData) {
+			    if(branch.trim().contains(emp_oc_code)) {
+			    	flagvalid = true;
+			    	return flagvalid;	
+			    }else {
+			    	flagvalid = false;
+			    	return flagvalid;
+			    }
+			}
+		}else if(req_oc_type.equalsIgnoreCase("Region")) {
+			String regionid = getNetworkidByOrganNameTH(req_organNameTH);
+			List<String> branchRegionData = getBranchListByRegionId(regionid);
+			
+			for(String branch: branchRegionData) {
+				if(branch.trim().contains(emp_oc_code)) {
+			    	flagvalid = true;
+			    	return flagvalid;	
+			    }else {
+			    	flagvalid = false;
+			    	return flagvalid;
+			    }
+			}
+		}
+		return false;
+	}
 	
 	@SuppressWarnings("finally")
 	public boolean insertFormValidateRq(HashMap<String,String> data) 
@@ -294,25 +546,25 @@ public class FormValidate {
 		boolean result = true;
 		boolean finalResult = true;
 		String msg = "";
-		result  = checkEmpID(rq.getEmpID());
+		result  = checkEmpID(rq.getEmpID()); System.out.println("result CheckEmpID : "+ rq.getEmpID() + " result "+ result);	
 		if(!result){  msg = msg+"EmpID "; finalResult = false; }
 		
-		result  = checkPosition(rq.getFwdPosition());
+		result  = checkPosition(rq.getFwdPosition()); System.out.println("result FWDPosition : "+ rq.getFwdPosition() + " result "+ result);
 		if(!result){  msg = msg+"FwdPosition "; finalResult = false; }
 		
-		result  = checkPosition(rq.getRevPosition());
+		result  = checkPosition(rq.getRevPosition()); System.out.println("result REVPosition : "+ rq.getFwdPosition() + " result "+ result);
 		if(!result){  msg = msg+"RevPosition "; finalResult = false; }
 		
-		result  = checkBranch(rq.getFwdBranch());
+		result  = checkBranch(rq.getFwdBranch()); System.out.println("result FWDBranch : "+ rq.getFwdBranch() + " result "+ result);
 		if(!result){  msg = msg+"FwdBranch "; finalResult = false; }
 		
-		result  = checkBranch(rq.getRevBranch());
+		result  = checkBranch(rq.getRevBranch()); System.out.println("result REVBranch : "+ rq.getRevBranch() + " result "+ result);
 		if(!result){  msg = msg+"RevBranch "; finalResult = false; }
 		
-		result  = checkDate(rq.getFwdEffectiveStartDate(),rq.getFwdEffectiveEndDate());
+		result  = checkDate(rq.getFwdEffectiveStartDate(),rq.getFwdEffectiveEndDate()); System.out.println("result FWD StartDate : "+ rq.getFwdEffectiveStartDate() + " result "+ result);
 		if(!result){  msg = msg+"StartDate,EndDate "; finalResult = false; }
 		
-		result  = checkEmpID(rq.getRequestorID());
+		result  = checkEmpID(rq.getRequestorID()); System.out.println("result EmpID : "+ rq.getRequestorID() + " result "+ result);
 		if(!result){  msg = msg+"RequestorID "; finalResult = false; }
 			
 		System.out.println("validate result : "+finalResult);		
@@ -405,10 +657,12 @@ public class FormValidate {
 				  preparedStatement.setString(1, seq);
 				  preparedStatement.setString(2, sdf.format(curDate.getTime()));
 				  preparedStatement.setString(3, rs.getRefNo());
-				  errmsg = rs.getErrorMsg().trim()+"111111111111111111111111111111111111111111111111111111111111111111111111111111111111111";
+				  errmsg = rs.getErrorMsg().trim();
 				  if (errmsg.length() > 254) errmsg = errmsg.substring(0, 255);
 				  preparedStatement.setString(4, errmsg);
-				  System.out.println("errmsg >>> " + errmsg.length());
+				  
+				  System.out.println("returnFormValidateRes final() statement >>  "  + preparedStatement);
+				  System.out.println("errmsg >>> " + errmsg.length() + " rs.getRefNo() " + rs.getRefNo());
 				  if (preparedStatement.executeUpdate() > 0) {
 					  System.out.println("returnFormValidateRes(): Insert into tbldt_wsformvalidaters succeed");
 				  } else {
@@ -817,7 +1071,7 @@ public class FormValidate {
 //			break;}
 //		}
 		
-		
+		/*
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd",Locale.ENGLISH);
 		SimpleDateFormat a = new SimpleDateFormat();
@@ -834,6 +1088,37 @@ public class FormValidate {
 		    
 		} catch (ParseException e) {
 		    e.printStackTrace();
-		} 				
+		} 			*/
+		
+		//HashMap<String,String> empData = getInfoByEmployee("90001");
+		//HashMap<String,String> reqData = getInfoByRequestor("90001");
+		//List<String> branchData2 = getBranchListByRegionId("SME");
+		
+		
+		//Map<String,String> reqData = test.getBranchListByAreaId("21");
+		
+		//getBranchListByAreaId("21");
+
+		//String branchData2 = getAreaCodeByOrganNameTH("AREA test01");
+		//System.out.println(branchData2.entrySet().size());
+		
+		HashMap<String,String> data = new HashMap<String,String>();
+		data.put("EmpID","90010");
+		
+		data.put("RequestorID", "90010");
+		FormValidate a = new FormValidate();
+		boolean flag = a.checkValidateBranch(data);
+		
+		System.out.println("flag " + flag);
+		
+		//System.out.println( "TESTTT " + "0002".contains(branchData2));
+		
+		//System.out.println(reqData.size());
+		
+		//System.out.println("id " + branchData2);
+		
+		
+		
+		 
 	}
 }
