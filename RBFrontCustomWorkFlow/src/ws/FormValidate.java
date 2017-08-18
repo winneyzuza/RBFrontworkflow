@@ -96,8 +96,18 @@ public class FormValidate {
 			boolean checkBranchValid = false;
 			checkBranchValid = checkValidateBranch(data);
 			
+			System.out.println("checkBranchValid >> " + checkBranchValid);
+			
 			if(!checkBranchValid) {
-				rs.setErrorMsg("ไม่สามารถขอ request ข้ามสาขาได้");
+				
+				if(data.get("OC_TYPE").equalsIgnoreCase("Branch")) {
+					rs.setErrorMsg("ไม่สามารถขอ request ข้ามสาขาได้");
+				}else if(data.get("OC_TYPE").equalsIgnoreCase("Area")) {
+					rs.setErrorMsg("ไม่สามารถขอ request ข้ามเขตได้");
+				}else if(data.get("OC_TYPE").equalsIgnoreCase("Region")) {
+					rs.setErrorMsg("ไม่สามารถขอ request ข้ามเครือข่ายได้");
+				}
+				
 				//return returnFormValidateRes();
 			}else {
 				boolean flag = true;
@@ -219,7 +229,7 @@ public class FormValidate {
 	}
 	
 	public static List<String>  getBranchListByRegionId(String regionid) {
-		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		Connection connect = DatbaseConnection.getConnectionMySQL();
 		PreparedStatement preparedStatement;
 		List<String> branchList = new ArrayList<String>();
 	
@@ -251,7 +261,7 @@ public class FormValidate {
 	}
 
 	public static List<String> getBranchListByAreaId(String areaid) {
-		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+		Connection connect = DatbaseConnection.getConnectionMySQL();
 		PreparedStatement preparedStatement;
 		
 		List<String> branchList = new ArrayList<String>();
@@ -282,23 +292,24 @@ public class FormValidate {
 		return branchList;
 	}
 	
-	public String getNetworkidByOrganNameTH(String organName) {
-		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+	public List<String> getNetworkidByOrganNameTH(String organName) {
+		Connection connect = DatbaseConnection.getConnectionMySQL();
 		PreparedStatement preparedStatement;
-		String reqData ="";
-	
+		String regionid = "";
+		List<String> regionList = new ArrayList<String>();
 		try {
 			
 			preparedStatement = connect
-			          .prepareStatement("SELECT regionid FROM tbldt_regionlist WHERE regionname LIKE ? ");
-			preparedStatement.setString(1, organName);
+			          .prepareStatement("SELECT regionid FROM tbldt_regionlist WHERE regionname like ? ");
+			preparedStatement.setString(1, organName+"%");
 			
 			System.out.println(" getNetworkByOrganNameTH organName : " + organName + " " + preparedStatement);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
-			if(resultSet.next()){
-				reqData =   resultSet.getString("regionid");   
-				System.out.println(" getNetworkidByOrganNameTH regionid = " + reqData);
+			while(resultSet.next()){
+				regionid =   resultSet.getString("regionid");   
+				System.out.println(" getNetworkidByOrganNameTH regionid = " + regionid);
+				regionList.add(regionid);
 			}
 		
 		} catch (SQLException e) {
@@ -310,27 +321,28 @@ public class FormValidate {
 			}			
 		}
 		
-		return reqData;
+		return regionList;
 	}
 	
 	
-	public static String getAreaCodeByOrganNameTH(String organName) {
-		Connection connect = DatbaseConnectionMsSQL.getConnectionMsSQL();
+	public static List<String> getAreaCodeByOrganNameTH(String organName) {
+		Connection connect = DatbaseConnection.getConnectionMySQL();
 		PreparedStatement preparedStatement;
-		String reqData ="";
-	
+		List<String> araeList = new ArrayList<String>();
+		String areaid = "";
 		try {
 			
 			preparedStatement = connect
-			          .prepareStatement("SELECT areaid FROM tbldt_arealist WHERE areaname LIKE ? ");
-			preparedStatement.setString(1, organName);
+			          .prepareStatement("SELECT areaid FROM tbldt_arealist WHERE areaname like ? ");
+			preparedStatement.setString(1, organName+"%");
 			
 			System.out.println(" getAreaCodeByOrganNameTH organName : " + organName + " " + preparedStatement);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
-			if(resultSet.next()){
-				reqData =   resultSet.getString("areaid");   
-				System.out.println(" getAreaCodeByOrganNameTH AreaID = " + reqData);
+			while(resultSet.next()){
+				areaid =   resultSet.getString("areaid");   
+				System.out.println(" getAreaCodeByOrganNameTH AreaID = " + areaid);
+				araeList.add(areaid);
 			}
 		
 		} catch (SQLException e) {
@@ -342,7 +354,7 @@ public class FormValidate {
 			}			
 		}
 		
-		return reqData;
+		return araeList;
 	}
 	
 	public HashMap<String, String> getInfoByEmployee(String empID) {
@@ -447,31 +459,39 @@ public class FormValidate {
 			return flagvalid;
 			
 		}else if(req_oc_type.equalsIgnoreCase("Area")) {
-			String areaid = getAreaCodeByOrganNameTH(req_organNameTH);
-			List<String> branchAreaData = getBranchListByAreaId(areaid);
-			
+			List<String> areaList = getAreaCodeByOrganNameTH(req_organNameTH);
+			List<String> branchAreaData = null;
+			for(String areaid : areaList) {
+				branchAreaData = getBranchListByAreaId(areaid);
+			}
 			for(String branch: branchAreaData) {
-			    if(branch.trim().contains(emp_oc_code)) {
+			    if(emp_oc_code.equals(branch)) {
 			    	flagvalid = true;
+			    	System.out.println("emp_oc_code " + emp_oc_code + " branch " + branch + " isEqual " + emp_oc_code.equals(branch));
 			    	return flagvalid;	
 			    }else {
 			    	flagvalid = false;
-			    	return flagvalid;
+			    	System.out.println("emp_oc_code " + emp_oc_code + " branch " + branch + " isEqual " + emp_oc_code.equals(branch));
 			    }
 			}
+			return flagvalid;
 		}else if(req_oc_type.equalsIgnoreCase("Region")) {
-			String regionid = getNetworkidByOrganNameTH(req_organNameTH);
-			List<String> branchRegionData = getBranchListByRegionId(regionid);
-			
+			List<String> regionList = getNetworkidByOrganNameTH(req_organNameTH);
+			List<String> branchRegionData = null;
+			for(String regionid : regionList) {
+				branchRegionData = getBranchListByRegionId(regionid);
+			}
 			for(String branch: branchRegionData) {
-				if(branch.trim().contains(emp_oc_code)) {
+				if(emp_oc_code.equals(branch)) {
 			    	flagvalid = true;
+			    	System.out.println("emp_oc_code " + emp_oc_code + " branch " + branch + " isEqual " + emp_oc_code.equals(branch));
 			    	return flagvalid;	
 			    }else {
 			    	flagvalid = false;
-			    	return flagvalid;
+			    	System.out.println("emp_oc_code " + emp_oc_code + " branch " + branch + " isEqual " + emp_oc_code.equals(branch));
 			    }
 			}
+			return flagvalid;
 		}
 		return false;
 	}
@@ -545,8 +565,10 @@ public class FormValidate {
 		
 		boolean result = true;
 		boolean finalResult = true;
-		String msg = "";
-		result  = checkEmpID(rq.getEmpID()); System.out.println("result CheckEmpID : "+ rq.getEmpID() + " result "+ result);	
+		
+		System.out.println("Entry validate function");
+		String msg = ""; System.out.println("result CheckEmpID : "+ rq.getEmpID() + " result "+ result);	
+		result  = checkEmpID(rq.getEmpID()); System.out.println(" result " + result);
 		if(!result){  msg = msg+"EmpID "; finalResult = false; }
 		
 		result  = checkPosition(rq.getFwdPosition()); System.out.println("result FWDPosition : "+ rq.getFwdPosition() + " result "+ result);
@@ -573,11 +595,12 @@ public class FormValidate {
 	}
 	
 	public boolean checkEmpID(String empID){
+		System.out.println(" checkEmpID " + empID);
 		if(empID.trim().length()<1){
 //			this.msgError = this.msgError +"empID ";
 			return false;
 		}else{
-			IAM i = new IAM(empID);
+			IAM i = new IAM(empID); System.out.println(" i.getErr() " + i.getErr());
 			if("Y".equals(i.getErr())){
 				return false;
 			}
@@ -1103,13 +1126,13 @@ public class FormValidate {
 		//System.out.println(branchData2.entrySet().size());
 		
 		HashMap<String,String> data = new HashMap<String,String>();
-		data.put("EmpID","90010");
+		data.put("EmpID","90012");
+		getAreaCodeByOrganNameTH("AREA test03");
+		data.put("RequestorID", "90013");
+		//FormValidate a = new FormValidate();
+		//boolean flag = a.checkValidateBranch(data);
 		
-		data.put("RequestorID", "90010");
-		FormValidate a = new FormValidate();
-		boolean flag = a.checkValidateBranch(data);
-		
-		System.out.println("flag " + flag);
+		//System.out.println("flag " + flag);
 		
 		//System.out.println( "TESTTT " + "0002".contains(branchData2));
 		
