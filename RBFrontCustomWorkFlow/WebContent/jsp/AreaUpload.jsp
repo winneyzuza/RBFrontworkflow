@@ -195,11 +195,17 @@ if(check){
 }
 
 AuditLog al = new AuditLog();
+Object user = session.getAttribute("userModify");
+String userModified = user.toString();
+
 al.setModule("AreaUpload");
 al.setDesc(success);
 al.setStatus("C");
+al.setUserModified(userModified);
+
 al.insertAuditLog();		
-		
+
+
 System.out.println("success:"+success);
 session.setAttribute("success", success);
 response.sendRedirect("importExport.jsp");
