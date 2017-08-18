@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Properties;
 
 public class Configuration {
 
@@ -106,6 +107,45 @@ public class Configuration {
 //		}
 		result = data.get(name);
 		return result;	
+	}
+	
+	public static String getHierarchyLevel(){
+		String path1 = pathDEV; //"C:\\file\\";
+		String path2 = pathPROD; //"/apps/";
+		
+		Properties prop = new Properties();
+		InputStream input = null;
+		String hierarchyLevel = "";
+		try {
+			String filename = Configuration.fileConfiguration;
+			
+			try{
+				input = new FileInputStream(path2+filename);
+		 	}catch(Exception e){
+		 		input = new FileInputStream(path1+filename);
+		 	}
+
+			// load a properties file
+			prop.load(input);
+
+			// get the property value and print it out
+			//System.out.println("hierarchyLevel " + prop.getProperty("hierarchyLevel"));
+			
+			hierarchyLevel = prop.getProperty("hierarchyLevel");
+			
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return hierarchyLevel;
 	}
 	
 	public static String getTYPE(){
