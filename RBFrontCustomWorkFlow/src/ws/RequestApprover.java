@@ -2,8 +2,10 @@ package ws;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -15,7 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
@@ -134,6 +136,15 @@ public class RequestApprover {
 			
 			
 			 RequestApproverRes rar = returnRequestApproverRes();
+			 
+			 System.out.println("\n*** rar.getApproverEmpID1() = " + rar.getApproverEmpID1() + "\n");
+			 System.out.println("\n*** rar.getApproverEmpID2() = " + rar.getApproverEmpID2() + "\n");
+			 System.out.println("\n*** rar.getApproverEmpID1() = " + rar.getApproverEmpID3() + "\n");
+			 
+			 System.out.println("\n*** rar.getApproverLevel1() = " + rar.getApproverLevel1() + "\n");
+			 System.out.println("\n*** rar.getApproverLevel2() = " + rar.getApproverLevel2() + "\n");
+			 System.out.println("\n*** rar.getApproverLevel3() = " + rar.getApproverLevel3() + "\n");
+			 
 			 if(rar.getApproverEmpID1().equals("AveksaAdmin")){
 				 msgError = "ไม่พบผู้อนุมัติที่ระดับ  "+rar.getApproverLevel1()+" ในระบบ (Authorization level not found)";
 				 flag =  false;
@@ -278,6 +289,7 @@ public class RequestApprover {
 			PreparedStatement preparedStatement;
 			int i =0;
 			boolean loopGo = true;
+			int hierarchyLevel =  Integer.valueOf(Configuration.getHierarchyLevel());
 			try {
 				do{preparedStatement = connect
 				          .prepareStatement("select h.manager,h.OC_TYPE,h.Job_Title_EN from IAM h where h.employeeID = ?");
@@ -290,7 +302,7 @@ public class RequestApprover {
 						o = resultSet.getString("OC_TYPE");
 						j = resultSet.getString("Job_Title_EN");
 						
-					}else if(i>20){
+					}else if(i>hierarchyLevel){
 						m = "AveksaAdmin";
 						break;
 					}else{
@@ -298,7 +310,8 @@ public class RequestApprover {
 						break;
 					}
 					i++;
-					
+					System.out.println("i before: " + i + " manager " + m + " octype " + o + " job title " + j);
+					System.out.println("ocType 1 " + ocType);
 					if("Branch".equals(ocType)){
 						if("Branch Manager".equals(j)){
 							m=temp;
@@ -325,7 +338,9 @@ public class RequestApprover {
 					}else{
 						loopGo = true;
 					}
-				}while(loopGo);
+					System.out.println("i after: " + i + " manager " + m + " octype " + o + " job title " + j);
+					
+				}while(loopGo); System.out.println("count " + i + "manager " + m);
 				
 //				if(i!=1){
 //					m=temp;
@@ -1188,6 +1203,14 @@ public class RequestApprover {
 	
 	
 	public static void main(String args[]){
+		RequestApprover res = new RequestApprover();
+		
+		
+		String mn = res.getManager("90246", "Region");
+		
+		System.out.println("mn >> " + mn);
+		
+		System.out.println("getHierarchyLevel " + Configuration.getHierarchyLevel());
 		
 //		String path = "D:\\work\\rbfront\\reqid.txt";
 //		
