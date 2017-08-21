@@ -99,12 +99,13 @@ public class FormValidate {
 			System.out.println("checkBranchValid >> " + checkBranchValid);
 			
 			if(!checkBranchValid) {
-				
-				if(data.get("OC_TYPE").equalsIgnoreCase("Branch")) {
+				HashMap<String,String> reqData = getInfoByRequestor(data.get("RequestorID"));
+				System.out.println("OC_TYPE of Req : " + reqData.get("OC_TYPE"));
+				if(reqData.get("OC_TYPE").equalsIgnoreCase("Branch")) {
 					rs.setErrorMsg("ไม่สามารถขอ request ข้ามสาขาได้");
-				}else if(data.get("OC_TYPE").equalsIgnoreCase("Area")) {
+				}else if(reqData.get("OC_TYPE").equalsIgnoreCase("Area")) {
 					rs.setErrorMsg("ไม่สามารถขอ request ข้ามเขตได้");
-				}else if(data.get("OC_TYPE").equalsIgnoreCase("Region")) {
+				}else if(reqData.get("OC_TYPE").equalsIgnoreCase("Region")) {
 					rs.setErrorMsg("ไม่สามารถขอ request ข้ามเครือข่ายได้");
 				}
 				
@@ -1125,10 +1126,10 @@ public class FormValidate {
 		//String branchData2 = getAreaCodeByOrganNameTH("AREA test01");
 		//System.out.println(branchData2.entrySet().size());
 		
-		HashMap<String,String> data = new HashMap<String,String>();
-		data.put("EmpID","90012");
-		getAreaCodeByOrganNameTH("AREA test03");
-		data.put("RequestorID", "90013");
+		//HashMap<String,String> data = new HashMap<String,String>();
+		//data.put("EmpID","90012");
+		//getAreaCodeByOrganNameTH("AREA test03");
+		//data.put("RequestorID", "90013");
 		//FormValidate a = new FormValidate();
 		//boolean flag = a.checkValidateBranch(data);
 		
