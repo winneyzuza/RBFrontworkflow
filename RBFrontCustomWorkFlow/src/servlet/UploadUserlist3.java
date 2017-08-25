@@ -180,9 +180,9 @@ public class UploadUserlist3  extends HttpServlet {
 					for(int i=j;i<lineAll.length-1;i++){
 						count++;
 						String line = lineAll[i];
-						System.out.println(i+" : "+line);
+						
 						if("".equals(line.trim())){
-							System.out.println("___"+line);
+							//System.out.println("___"+line);
 							continue;
 						}
 						
@@ -391,11 +391,7 @@ public class UploadUserlist3  extends HttpServlet {
 	public static ArrayList<TerminalList>  getInfoByFiles(String file) {
 		ArrayList<TerminalList> obj = new ArrayList<TerminalList>();
 		TerminalList term = null;
-		System.out.println(" >> file >> " + file + " <<<<  \n");
 		
-		
-		//String lineAll[] = file.split("\n");
-		//System.out.println(" >> lineAll[]  >> " + lineAll[0]  + "\n ");
 		String OrgCode = "";
 		String EmpID = "";
 		
@@ -415,7 +411,7 @@ public class UploadUserlist3  extends HttpServlet {
 		for(int i=j;i<lineAll.length-1;i++){
 		    
 			String line = lineAll[i];
-			//System.out.println("line XXXX " + line + " line.length() " + line.length());
+			
 			if("".equals(line.trim())){
 				System.out.println("___"+line);
 				continue;
@@ -453,9 +449,9 @@ public class UploadUserlist3  extends HttpServlet {
 			
 			 
 			//data.put(OrgCode, obj);
-			System.out.println("line OrgCode " + OrgCode);
-			System.out.println("line EmpID " + EmpID);
-			System.out.println("line TerminalID " + TerminalID);
+			//System.out.println("line OrgCode " + OrgCode);
+			//System.out.println("line EmpID " + EmpID);
+			//System.out.println("line TerminalID " + TerminalID);
 			obj.add(term);
 		}		
 		
@@ -534,8 +530,6 @@ public class UploadUserlist3  extends HttpServlet {
 	}
 	
 	public List<String> getDummyBranch(ArrayList<TerminalList> termLists){
-		
-		 //HashMap<String,String> dummyList = new HashMap<String,String>();
 		 List<String> branchList = getBranchInfo();
 		 List<String> orgList = new ArrayList<String>();
 		 
@@ -549,8 +543,6 @@ public class UploadUserlist3  extends HttpServlet {
 	        	orgList.remove(orgList.lastIndexOf(s));
 	         }
 	      }
-		 
-		 //System.out.println(" orgList SIZE " + orgList.size());
 		 Collection<String> orgCodeCollection = new HashSet<String>(orgList);
 		 
 		 Collection<String> branchCollection = new HashSet<String>(branchList);
@@ -558,20 +550,6 @@ public class UploadUserlist3  extends HttpServlet {
 		 orgCodeCollection.removeAll(branchCollection);
 		 
 		 List<String> dummyList1 = new ArrayList<String>(orgCodeCollection);
-		 
-		 //System.out.println("Result: " + orgCodeCollection);
-		 
-		 /*
-		 for (TerminalList term : termLists) {
-			 String orgCode = term.getOrgCode();
-			 String termID = term.getTerminalID();
-			 boolean isBranch = isBranchInfo(orgCode, branchList);
-			 //System.out.println(" isBranch " + isBranch + " orgCode " + orgCode);
-			 if(!isBranch) {
-				 dummyList.put(orgCode, termID);
-				 System.out.println("Dummy " + dummyList.get(orgCode));
-			 }
-		 }*/
 		
 		return dummyList1;
 	}
@@ -590,7 +568,6 @@ public class UploadUserlist3  extends HttpServlet {
 			
 			while(resultSet.next()){
 				orgCode =   resultSet.getString("orgCode");   
-				System.out.println(" getBranchInfo orgCode = " + orgCode);
 				branchList.add(orgCode);
 			}
 		
@@ -608,16 +585,9 @@ public class UploadUserlist3  extends HttpServlet {
 	
 	
 	public String hasDuplicates(ArrayList<TerminalList> termLists, List<String> mapDummy) {
-	    //final ArrayList<String,String> useTerm = new ArrayList<String>();
 	    List<String> useTerm = new ArrayList<String>(); 
 	    List<String> key = new ArrayList<String>(); 
-	    List<String> useTerm1 = new ArrayList<String>(); 
-	    List<String> key1 = new ArrayList<String>(); 
-	    
-	    
-	    List<String> temp = new ArrayList<String>();
-	    List<String> tempUse = new ArrayList<String>(); 
-	    
+    
 	    ArrayList<TerminalList> termDummyList = new ArrayList<TerminalList>();
 	    TerminalList t = null; 
 	    
@@ -632,40 +602,21 @@ public class UploadUserlist3  extends HttpServlet {
 	    		t = new TerminalList();
 	    		String termOrg = term.getOrgCode();
 	    		String termVal = term.getTerminalID();
-	    		System.out.println(" termOrg >> " + termOrg);
 	    		for (String entry : mapDummy) {
 	    			
 	    			if (termOrg.equals(entry)) {
-	    				 //temp.add(termVal);
 	    				 t.setTerminalList2(termOrg, termVal);
 	    				 termDummyList.add(t);
 		    			 itr.remove();
-		    			 System.out.println("value remove " + entry);
 		    			 
 		    		 }
 	    		}
 	    		 
 	    	}
-	    	System.out.println("termLists SIXE " + termLists.size());
-	    	System.out.println("termDummyList SIZE " + termDummyList.size());
-	    	/*
-	    	for(String term : temp ) {
-	    		System.out.println("term : " + term);
-	    		if(!"".equals(term)) {
-	    			if(tempUse.contains(term)) {
-		    			return "Terminal ID is duplicated at terminal ID : " + term;
-		    		}
-	    		}
-	    		tempUse.add(term);
-	    	}*/
-	    	
 	    	for (TerminalList term : termDummyList) {
 	    		 final String termId = term.getTerminalID();
 			     final String orgCode = term.getOrgCode();
-			     
-			     System.out.println("useTerm " + useTerm + " termId " + termId + "\n");
-			     System.out.println("key " + key + " value " + orgCode+termId + "\n");
-			     
+		     
 			     if(key.size()>0) {
 			    	 if(!"".equals(termId)) {
 						if (useTerm.contains(termId) && key.contains(orgCode+termId)) {
@@ -688,7 +639,6 @@ public class UploadUserlist3  extends HttpServlet {
 	    	for (TerminalList term : termLists) {
 		        final String termId = term.getTerminalID();
 		        final String orgCode = term.getOrgCode();
-		        System.out.println("orgCode " + orgCode + " termId " + termId);
 		       
 		        if(termId.length() > 0) {
 		        	if(key.size()>0) {
@@ -712,8 +662,7 @@ public class UploadUserlist3  extends HttpServlet {
 	    	for (TerminalList term : termLists) {
 		        final String termId = term.getTerminalID();
 		        final String orgCode = term.getOrgCode();
-		        System.out.println("orgCode " + orgCode + " termId " + termId + " len " + termId.length());
-		       
+		  
 		        if(termId.length() > 0) {
 			        if(key.size()>0) {
 			        	
