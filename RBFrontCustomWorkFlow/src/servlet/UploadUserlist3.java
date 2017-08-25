@@ -7,13 +7,21 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -112,6 +120,9 @@ public class UploadUserlist3  extends HttpServlet {
 	
 	public boolean insertTerminal(String file ) throws SQLException{
 		
+		ArrayList<TerminalList> termList = getInfoByFiles(file);
+		System.out.println("termList.size() " +termList.size());
+		
 	  	int count =0;
 		boolean flag = true;
 		Connection connect = DatbaseConnection.getConnectionMySQL();
@@ -134,7 +145,7 @@ public class UploadUserlist3  extends HttpServlet {
 			  
 			  preparedStatement = connect.prepareStatement("INSERT INTO tblmt_terminallist_log (SELECT * FROM tblmt_terminallist) ");
 			  preparedStatement.executeUpdate();
-			  System.out.println("insert log terminal success.");				  
+			  System.out.println("insert log terminal success. " + preparedStatement);				  
 			  	
 				int s1 = 0;
 				int l1 = file.indexOf("\n",s1);
@@ -146,123 +157,155 @@ public class UploadUserlist3  extends HttpServlet {
 				}
 				//for(int i=0;i<10;i++){
 				boolean check = true;
-				for(int i=j;i<lineAll.length-1;i++){
-					count++;
-					String line = lineAll[i];
-					//System.out.println(i+":"+line);
-					if("".equals(line.trim())){
-						System.out.println("___"+line);
-						continue;
-					}
-					
-					String OrgCode = "";
-					String EmpID = "";
-					String Name = "";
-					String TechnicalRole = "";
-					String BusinessRole = "";
-					String TerminalID = "";
-					String Reserved = "";
-					
-					try{
-						
-						int s = 0;
-						int l = line.indexOf(",");
-						 OrgCode = line.substring(s,l);
-						check = check && CheckFile.checkBranch(OrgCode);
-						
-						s=l+1; l=line.indexOf(",",s);
-						 EmpID = line.substring(s,l);
-						check = check && CheckFile.checkEmpID(EmpID);
-	
-						s=l+1;  l=line.indexOf(",",s);
-						 Name = line.substring(s,l);
-						
-						s=l+1;	l=line.indexOf(",",s);
-						 TechnicalRole = line.substring(s,l);
-						
-						s=l+1;	l=line.indexOf(",",s);
-						 BusinessRole = line.substring(s,l);
-						
-						s=l+1;	l=line.indexOf(",",s);
-						 TerminalID = line.substring(s,l);
-						//check = check && CheckFile.checkTerminal(TerminalID);
-						
-						s=l+1;	l=line.indexOf(",",s);
-						 Reserved = "Y";//line.substring(s,line.length());
-						//check = check && CheckFile.checkYN(Reserved);
-							
-//						System.out.println(check+"test="+OrgCode+":2"+EmpID+":3"+Name+":4"+TechnicalRole+":5"+BusinessRole+":6"+TerminalID+":7"+Reserved);
-					}catch(Exception e){
-						System.out.println("error get data from userlist3 row:"+i);
-						e.printStackTrace();
-						 AuditLog a2 = new AuditLog();
-						 a2.setStatus("EU");
-						 a2.setModule("ข้อมูล UsrList3 ไม่ตรงตามเงือนไข");
-						 a2.setDesc("แถวที่:"+(i+1)+" ข้อมูล:"+lineAll[i]);
-						 a2.insertAuditLog();
-					}
-						
-					////////////////////////////////////
-						if(check){
-							
-							PreparedStatement preparedStatement2 = connect.prepareStatement("select t.OrgCode,t.TerminalID from tblmt_terminallist t where t.OrgCode = LPAD(?,4,'0') and t.TerminalID like ? ");
-							preparedStatement2.setString(1, OrgCode);
-							preparedStatement2.setString(2, TerminalID);
-//							System.out.println(preparedStatement2);
-							ResultSet resultSet2 = preparedStatement2.executeQuery();
-							
-							if(resultSet2.next()){
-								String sql = "UPDATE tblmt_terminallist SET EmpID=?,Name=?,TechnicalRole=?,BusinessRole=?,Reserved=? WHERE OrgCode= LPAD(?,4,'0') and TerminalID= ? ";
-								
-								  	preparedStatement = connect.prepareStatement(sql);
-								    preparedStatement.setString(1, EmpID);
-								    preparedStatement.setString(2, Name);
-								    preparedStatement.setString(3, TechnicalRole);
-								    preparedStatement.setString(4, BusinessRole);
-								    preparedStatement.setString(5, Reserved);
-								    preparedStatement.setString(6, OrgCode);
-								    preparedStatement.setString(7, TerminalID);
-		
-								    preparedStatement.executeUpdate();
-								    
-								    String BusRole = NormalFunction.convertPositionTecnicalToUser(TechnicalRole);
-								    EmployeeInfo.updateEmployee(EmpID,OrgCode,TechnicalRole,BusinessRole,TerminalID,BusRole);
-							      
-							}else{
-								  preparedStatement = connect.prepareStatement("insert into  tblmt_terminallist values ( LPAD(?,4,'0'), ?, ?, ?, ?, ?, ?)");
-							      preparedStatement.setString(1, OrgCode);
-							      preparedStatement.setString(2, EmpID);
-							      preparedStatement.setString(3, Name);
-							      preparedStatement.setString(4, TechnicalRole);
-							      preparedStatement.setString(5, BusinessRole);
-							      preparedStatement.setString(6, TerminalID);
-							      preparedStatement.setString(7, Reserved);
-							      
-							      preparedStatement.executeUpdate();							      
-							}
-						}// end if check
-						else{
-							 //count=1000;
+				
+				List<String> mapDummy = getDummyBranch(termList);
+				
+				/*
+				for (Map.Entry<String, String> entry : mapDummy.entrySet()) {
+				    String key = entry.getKey().toString();
+				    String value = entry.getValue();
+				    System.out.println("key, " + key + " value " + value);
+				}*/
 
-							// break;
+				//System.out.println("getDummyBranch " + dummy.size());
+				
+				String duplicate = hasDuplicates(termList, mapDummy);
+				System.out.println(" duplicate " + duplicate);
+				
+				if(duplicate.length() > 0) {
+					 al.setStatus("E");
+					 success = duplicate;
+					 rollback();
+				}else {
+					for(int i=j;i<lineAll.length-1;i++){
+						count++;
+						String line = lineAll[i];
+						System.out.println(i+" : "+line);
+						if("".equals(line.trim())){
+							System.out.println("___"+line);
+							continue;
 						}
-					      
-					}// end for
-				
-				
-				if(count<300){
-					 al.setStatus("E");
-					 success = "terminal สำหรับอัพเดดมีน้อยเกินไป rollback";
-					 rollback();
-				}else if(!check){
-					 al.setStatus("E");
-					 success = "formate file ไม่ถูกต้อง  row ที่ "+count;
-					 rollback();
-				}else{
-					//success = "row sucess="+count+":อัพเดดข้อมูล terminal เรียบร้อย";
-					success = "อัพเดดข้อมูล terminal เรียบร้อย";
-					al.setStatus("C");
+						
+						String OrgCode = "";
+						String EmpID = "";
+						String Name = "";
+						String TechnicalRole = "";
+						String BusinessRole = "";
+						String TerminalID = "";
+						String Reserved = "";
+						
+						try{
+							
+							int s = 0;
+							int l = line.indexOf(",");
+							 OrgCode = line.substring(s,l);
+							check = check && CheckFile.checkBranch(OrgCode);
+							
+							s=l+1; l=line.indexOf(",",s);
+							 EmpID = line.substring(s,l);
+							check = check && CheckFile.checkEmpID(EmpID);
+		
+							s=l+1;  l=line.indexOf(",",s);
+							 Name = line.substring(s,l);
+							
+							s=l+1;	l=line.indexOf(",",s);
+							 TechnicalRole = line.substring(s,l);
+							
+							s=l+1;	l=line.indexOf(",",s);
+							 BusinessRole = line.substring(s,l);
+							
+							s=l+1;	l=line.indexOf(",",s);
+							 TerminalID = line.substring(s,l);
+							//check = check && CheckFile.checkTerminal(TerminalID);
+							
+							s=l+1;	l=line.indexOf(",",s);
+							 Reserved = "Y";//line.substring(s,line.length());
+							//check = check && CheckFile.checkYN(Reserved);
+							 	
+							 
+//							System.out.println(check+"test="+OrgCode+":2"+EmpID+":3"+Name+":4"+TechnicalRole+":5"+BusinessRole+":6"+TerminalID+":7"+Reserved);
+						}catch(Exception e){
+							System.out.println("error get data from userlist3 row:"+i);
+							e.printStackTrace();
+							 AuditLog a2 = new AuditLog();
+							 a2.setStatus("EU");
+							 a2.setModule("ข้อมูล UsrList3 ไม่ตรงตามเงือนไข");
+							 a2.setDesc("แถวที่:"+(i+1)+" ข้อมูล:"+lineAll[i]);
+							 a2.insertAuditLog();
+						}
+							
+						////////////////////////////////////
+							if(check){
+								
+								PreparedStatement preparedStatement2 = connect.prepareStatement("select t.OrgCode,t.TerminalID from tblmt_terminallist t where t.OrgCode = LPAD(?,4,'0') and t.TerminalID like ? ");
+								preparedStatement2.setString(1, OrgCode);
+								preparedStatement2.setString(2, TerminalID);
+								System.out.println("preparedStatement2 " + preparedStatement2);
+								ResultSet resultSet2 = preparedStatement2.executeQuery();
+								
+								if(resultSet2.next()){
+									String sql = "UPDATE tblmt_terminallist SET EmpID=?,Name=?,TechnicalRole=?,BusinessRole=?,Reserved=? WHERE OrgCode= LPAD(?,4,'0') and TerminalID= ? ";
+									
+									  	preparedStatement = connect.prepareStatement(sql);
+									    preparedStatement.setString(1, EmpID);
+									    preparedStatement.setString(2, Name);
+									    preparedStatement.setString(3, TechnicalRole);
+									    preparedStatement.setString(4, BusinessRole);
+									    preparedStatement.setString(5, Reserved);
+									    preparedStatement.setString(6, OrgCode);
+									    preparedStatement.setString(7, TerminalID);
+			
+									    preparedStatement.executeUpdate();
+									   
+									    String BusRole = NormalFunction.convertPositionTecnicalToUser(TechnicalRole);
+									    EmployeeInfo.updateEmployee(EmpID,OrgCode,TechnicalRole,BusinessRole,TerminalID,BusRole);
+								      
+								}else{
+									  preparedStatement = connect.prepareStatement("insert into  tblmt_terminallist values ( LPAD(?,4,'0'), ?, ?, ?, ?, ?, ?)");
+								      preparedStatement.setString(1, OrgCode);
+								      preparedStatement.setString(2, EmpID);
+								      preparedStatement.setString(3, Name);
+								      preparedStatement.setString(4, TechnicalRole);
+								      preparedStatement.setString(5, BusinessRole);
+								      preparedStatement.setString(6, TerminalID);
+								      preparedStatement.setString(7, Reserved);
+								      
+								      preparedStatement.executeUpdate();							      
+								} System.out.println("preparedStatement3 " + preparedStatement);
+							}// end if check
+							else{
+								 //count=1000;
+
+								// break;
+							}
+						      
+						}// end for
 				}
+				
+				
+				
+				System.out.println("Count >> " + count);
+				
+				if(duplicate.length() > 0) {
+					 al.setStatus("E");
+					 success = duplicate;
+					 rollback();
+				}else {
+					if(count<2){
+						 al.setStatus("E");
+						 success = "terminal สำหรับอัพเดดมีน้อยเกินไป rollback";
+						 rollback();
+					}else if(!check){
+						 al.setStatus("E");
+						 success = "formate file ไม่ถูกต้อง  row ที่ "+count;
+						 rollback();
+					}else{
+						//success = "row sucess="+count+":อัพเดดข้อมูล terminal เรียบร้อย";
+						success = "อัพเดดข้อมูล terminal เรียบร้อย";
+						al.setStatus("C");
+					}
+				}
+				
 				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
@@ -292,6 +335,133 @@ public class UploadUserlist3  extends HttpServlet {
 		  System.out.println("insert log terminal success.");
 		  
 	}
+	
+
+	public Map<String, ArrayList<String>>  getInfoByFile(String file) {
+		Map<String,ArrayList<String>> data = new HashMap<String,ArrayList<String>>();
+		ArrayList<String> obj = new ArrayList<String>();
+		
+		
+		String lineAll[] = file.split("\n");
+		String OrgCode = "";
+		String EmpID = "";
+		String Name = "";
+		String TechnicalRole = "";
+		String BusinessRole = "";
+		String TerminalID = "";
+		
+		for(int i=0;i<lineAll.length;i++){
+			String line = lineAll[i];
+			System.out.println("line XXXX " + line);
+			
+			int s = 0;
+			int l = line.indexOf(",");
+			OrgCode = line.substring(s,l);
+			obj.add(OrgCode);
+			
+			s=l+1; l=line.indexOf(",",s);
+			EmpID = line.substring(s,l);
+			obj.add(EmpID);
+			
+			s=l+1;  l=line.indexOf(",",s);
+			Name = line.substring(s,l);
+			 
+			s=l+1;	l=line.indexOf(",",s);
+			TechnicalRole = line.substring(s,l);
+			
+			s=l+1;	l=line.indexOf(",",s);
+			BusinessRole = line.substring(s,l);
+			
+			s=l+1;	l=line.indexOf(",",s);
+			TerminalID = line.substring(s,l);
+			obj.add(TerminalID);
+			 
+			data.put(OrgCode, obj);
+			//System.out.println("line OrgCode " + OrgCode);
+			//System.out.println("line EmpID " + EmpID);
+			//System.out.println("line TerminalID " + TerminalID);
+		
+			
+		}
+		
+		return data;
+	}
+	
+	
+	public static ArrayList<TerminalList>  getInfoByFiles(String file) {
+		ArrayList<TerminalList> obj = new ArrayList<TerminalList>();
+		TerminalList term = null;
+		System.out.println(" >> file >> " + file + " <<<<  \n");
+		
+		
+		//String lineAll[] = file.split("\n");
+		//System.out.println(" >> lineAll[]  >> " + lineAll[0]  + "\n ");
+		String OrgCode = "";
+		String EmpID = "";
+		
+		String Name = "";
+		String TechnicalRole = "";
+		String BusinessRole = "";
+		String TerminalID = "";
+		
+		int s1 = 0;
+		String lineAll[] = file.split("\n");
+		
+		int j=0;
+		if(lineAll[j].indexOf("Branch")>-1){
+			j=1;
+		}
+		
+		for(int i=j;i<lineAll.length-1;i++){
+		    
+			String line = lineAll[i];
+			//System.out.println("line XXXX " + line + " line.length() " + line.length());
+			if("".equals(line.trim())){
+				System.out.println("___"+line);
+				continue;
+			}
+			
+			int s = 0;
+			int l = line.indexOf(",");
+			
+			
+			//System.out.println("index S : " + s + " l :" + l);
+			OrgCode = line.substring(s,l);
+			//term.setOrgCode(OrgCode);
+			
+			s=l+1; l=line.indexOf(",",s);
+			EmpID = line.substring(s,l);
+			//term.setEmpID(EmpID);
+			
+			
+			s=l+1;  l=line.indexOf(",",s);
+			Name = line.substring(s,l);
+			 
+			s=l+1;	l=line.indexOf(",",s);
+			TechnicalRole = line.substring(s,l);
+			
+			s=l+1;	l=line.indexOf(",",s);
+			BusinessRole = line.substring(s,l);
+			
+			s=l+1;	l=line.indexOf(",",s);
+			TerminalID = line.substring(s,l);
+			//term.setTerminalID(TerminalID);
+			s=l+1;	l=line.indexOf(",",s);
+			
+			term = new TerminalList();
+			term.setTerminalList(OrgCode, EmpID, TerminalID);
+			
+			 
+			//data.put(OrgCode, obj);
+			System.out.println("line OrgCode " + OrgCode);
+			System.out.println("line EmpID " + EmpID);
+			System.out.println("line TerminalID " + TerminalID);
+			obj.add(term);
+		}		
+		
+		return obj;
+	}
+	
 	
 	public boolean importHR(){
 		boolean flag = true;
@@ -348,10 +518,260 @@ public class UploadUserlist3  extends HttpServlet {
 		return flag;
 	}
 	
+	public boolean isBranchInfo(String orgCode, List<String> branchList) {
+		boolean isBranch = false;
+		
+		for(String branch : branchList) {
+			System.out.println("branch from branchList " + branch);
+			if(branch.equals(orgCode)) {
+				isBranch = true;
+				return isBranch;
+			}
+			
+		}
+		
+		return isBranch;
+	}
+	
+	public List<String> getDummyBranch(ArrayList<TerminalList> termLists){
+		
+		 //HashMap<String,String> dummyList = new HashMap<String,String>();
+		 List<String> branchList = getBranchInfo();
+		 List<String> orgList = new ArrayList<String>();
+		 
+		 for (TerminalList term : termLists) {
+			 orgList.add(term.getOrgCode());
+		 }
+		 
+		 Object[] st = orgList.toArray();
+	      for (Object s : st) {
+	        if (orgList.indexOf(s) != orgList.lastIndexOf(s)) {
+	        	orgList.remove(orgList.lastIndexOf(s));
+	         }
+	      }
+		 
+		 //System.out.println(" orgList SIZE " + orgList.size());
+		 Collection<String> orgCodeCollection = new HashSet<String>(orgList);
+		 
+		 Collection<String> branchCollection = new HashSet<String>(branchList);
+		 
+		 orgCodeCollection.removeAll(branchCollection);
+		 
+		 List<String> dummyList1 = new ArrayList<String>(orgCodeCollection);
+		 
+		 //System.out.println("Result: " + orgCodeCollection);
+		 
+		 /*
+		 for (TerminalList term : termLists) {
+			 String orgCode = term.getOrgCode();
+			 String termID = term.getTerminalID();
+			 boolean isBranch = isBranchInfo(orgCode, branchList);
+			 //System.out.println(" isBranch " + isBranch + " orgCode " + orgCode);
+			 if(!isBranch) {
+				 dummyList.put(orgCode, termID);
+				 System.out.println("Dummy " + dummyList.get(orgCode));
+			 }
+		 }*/
+		
+		return dummyList1;
+	}
+	
+	public List<String> getBranchInfo() {
+		Connection connect = DatbaseConnection.getConnectionMySQL();
+		PreparedStatement preparedStatement;
+		List<String> branchList = new ArrayList<String>();
+		String orgCode = "";
+		try {
+			
+			preparedStatement = connect
+			          .prepareStatement("SELECT DISTINCT orgCode FROM tblmt_branchinfo ");
+			
+			ResultSet resultSet = preparedStatement.executeQuery();
+			
+			while(resultSet.next()){
+				orgCode =   resultSet.getString("orgCode");   
+				System.out.println(" getBranchInfo orgCode = " + orgCode);
+				branchList.add(orgCode);
+			}
+		
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try {
+				connect.close();
+			} catch (SQLException e) {
+			}			
+		}
+		
+		return branchList;
+	}
+	
+	
+	public String hasDuplicates(ArrayList<TerminalList> termLists, List<String> mapDummy) {
+	    //final ArrayList<String,String> useTerm = new ArrayList<String>();
+	    List<String> useTerm = new ArrayList<String>(); 
+	    List<String> key = new ArrayList<String>(); 
+	    List<String> useTerm1 = new ArrayList<String>(); 
+	    List<String> key1 = new ArrayList<String>(); 
+	    
+	    
+	    List<String> temp = new ArrayList<String>();
+	    List<String> tempUse = new ArrayList<String>(); 
+	    
+	    ArrayList<TerminalList> termDummyList = new ArrayList<TerminalList>();
+	    TerminalList t = null; 
+	    
+	    int dummyCount = mapDummy.size();
+	    
+	    System.out.println("dummyCount " + dummyCount);
+	    if(dummyCount > 0){
+	    	
+	    	Iterator<TerminalList> itr = termLists.iterator();
+	    	while (itr.hasNext()) {
+	    		TerminalList term = itr.next();
+	    		t = new TerminalList();
+	    		String termOrg = term.getOrgCode();
+	    		String termVal = term.getTerminalID();
+	    		System.out.println(" termOrg >> " + termOrg);
+	    		for (String entry : mapDummy) {
+	    			
+	    			if (termOrg.equals(entry)) {
+	    				 //temp.add(termVal);
+	    				 t.setTerminalList2(termOrg, termVal);
+	    				 termDummyList.add(t);
+		    			 itr.remove();
+		    			 System.out.println("value remove " + entry);
+		    			 
+		    		 }
+	    		}
+	    		 
+	    	}
+	    	System.out.println("termLists SIXE " + termLists.size());
+	    	System.out.println("termDummyList SIZE " + termDummyList.size());
+	    	/*
+	    	for(String term : temp ) {
+	    		System.out.println("term : " + term);
+	    		if(!"".equals(term)) {
+	    			if(tempUse.contains(term)) {
+		    			return "Terminal ID is duplicated at terminal ID : " + term;
+		    		}
+	    		}
+	    		tempUse.add(term);
+	    	}*/
+	    	
+	    	for (TerminalList term : termDummyList) {
+	    		 final String termId = term.getTerminalID();
+			     final String orgCode = term.getOrgCode();
+			     
+			     System.out.println("useTerm " + useTerm + " termId " + termId + "\n");
+			     System.out.println("key " + key + " value " + orgCode+termId + "\n");
+			     
+			     if(key.size()>0) {
+			    	 if(!"".equals(termId)) {
+						if (useTerm.contains(termId) && key.contains(orgCode+termId)) {
+						    return "Terminal ID is duplicated at orgCode : " + term.getOrgCode() + " and TerminalID : " + termId;
+						}else if(termId.length() < 1) {
+							return "Terminal ID is empty at orgCode : " + term.getOrgCode() + " and empty TerminalID";
+						}
+			         }
+			     }
+			     
+			     useTerm.add(termId);
+			     key.add(orgCode+termId);   
+			       
+			     
+	    	}
+	    	
+	    	useTerm.clear();
+	    	key.clear();
+	    	
+	    	for (TerminalList term : termLists) {
+		        final String termId = term.getTerminalID();
+		        final String orgCode = term.getOrgCode();
+		        System.out.println("orgCode " + orgCode + " termId " + termId);
+		       
+		        if(termId.length() > 0) {
+		        	if(key.size()>0) {
+			        	
+			        	if (useTerm.contains(termId) && key.contains(orgCode+termId)) {
+				            return "Terminal ID is duplicated at orgCode : " + term.getOrgCode() + " and TerminalID : " + termId;
+				        }else if(termId.length() < 1) {
+				        	return "Terminal ID is empty at orgCode : " + term.getOrgCode()+ " and empty TerminalID";
+				        }
+				    }
+		        }else {
+		        	
+		        	return "Terminal ID is empty at orgCode : " + term.getOrgCode()+ " and empty TerminalID";
+		        }
+		        
+		        
+		        useTerm.add(termId);
+		        key.add(orgCode+termId);
+		    }
+	    }else {
+	    	for (TerminalList term : termLists) {
+		        final String termId = term.getTerminalID();
+		        final String orgCode = term.getOrgCode();
+		        System.out.println("orgCode " + orgCode + " termId " + termId + " len " + termId.length());
+		       
+		        if(termId.length() > 0) {
+			        if(key.size()>0) {
+			        	
+			        	if (useTerm.contains(termId) && key.contains(orgCode+termId)) {
+				            return "Terminal ID is duplicated at orgCode : " + term.getOrgCode() + " and TerminalID : " + termId;
+				        }else if(termId.length() < 1) {
+				        	return "Terminal ID is empty at orgCode : " + term.getOrgCode()+ " and empty TerminalID";
+				        }
+				    }
+		        }else {
+		        	return "Terminal ID is empty at orgCode : " + term.getOrgCode()+ " and empty TerminalID";
+		        }
+		        useTerm.add(termId);
+		        key.add(orgCode+termId);
+		    }
+	    }
+	    
+	    
+
+	    return "";
+	}
+	
+	
 	public static void main(String[] args){
 		// TODO Auto-generated method stub
 		UploadUserlist3 test = new UploadUserlist3();
-		test.startUploadUserlist3();
+		//test.startUploadUserlist3();
+		
+		//test.getBranchInfo();
+		
+		/*
+		Map<String, ArrayList<String>> map = test.getInfoByFile("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
+		
+		
+		for (Entry<String, ArrayList<String>> ee : map.entrySet()) {
+		    String key = ee.getKey();
+		    ArrayList<String> values = ee.getValue();
+		    
+		    
+		    System.out.println("XXXX " + values.get(2) + "key " + key );
+		    // TODO: Do something.
+		}*/
+		
+		//TerminalList term = new 
+		
+		//ArrayList<String> data = test.getInfoByFiles("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
+		
+		//for (int i = 0; i < data.size(); i++) {
+		//	System.out.println("" + data.get(i));
+		//}
+		
+		
+		ArrayList<TerminalList> termList = test.getInfoByFiles("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
+		for (int x=0; x<termList.size(); x++) {
+			
+			
+			 System.out.println("termList >> " + termList.get(x).getEmpID());
+		}
 	}
 
 }
