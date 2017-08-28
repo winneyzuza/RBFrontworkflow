@@ -64,10 +64,12 @@
 					mainForm.submit();
 				}else if(cmd.substring(0,6)=='remove'){
 					var i = cmd.substring(6)
-// 					alert(i)
+ 					//alert(i)
 					//alert(document.getElementById ( "OrgCode"+i ).innerText)
 					document.getElementById("TRemove").value = document.getElementById ( "TerminalID"+i ).innerText;
 					document.getElementById("TBRemove").value = document.getElementById ( "OrgCode"+i ).innerText;
+					document.getElementById("EmpRemove").value = document.getElementById ( "EmpID"+i ).innerText;
+				
 // 					alert(document.getElementById("TRemove").value);
 // 					alert(document.getElementById("TBRemove").value);
 					mainForm.setAttribute("action","terminalRemove.jsp");
@@ -292,7 +294,8 @@ public String getCheckBox(String Y){
 		<form id="mainForm" method="post" action="">
 		<input type="hidden" id="TRemove" name="TRemove" value="">
 		<input type="hidden" id="TBRemove" name="TBRemove" value="">
-		 	
+		<input type="hidden" id="EmpRemove" name="EmpRemove" value="">
+		
 		      <!-- main page --> 
 				<table border="0" cellpadding="0" cellspacing="0"  class="tbl_search">
 		                      <tr>

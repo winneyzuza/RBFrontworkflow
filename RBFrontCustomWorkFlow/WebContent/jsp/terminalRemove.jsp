@@ -19,6 +19,8 @@
 	  	
 	  	String TerminalID = request.getParameter("TRemove");
 	  	String OrgCode = request.getParameter("TBRemove");
+	  	String EmpID = request.getParameter("EmpRemove");
+	  	
 		System.out.println("BRemove:"+request.getParameter("BRemove"));
 		
 		Connection connect = null;
@@ -26,10 +28,11 @@
 		connect = DatbaseConnection.getConnectionMySQL();
 		
 		String sql = "DELETE FROM tblmt_terminallist "+
-				"WHERE TerminalID = ? and OrgCode = ? ";
+				"WHERE TerminalID = ? and OrgCode = ? and EmpID = ? ";
 		preparedStatement = connect.prepareStatement(sql);
 	    preparedStatement.setString(1, TerminalID);
 	    preparedStatement.setString(2, OrgCode);
+	    preparedStatement.setString(3, EmpID);
 	    System.out.println("preparedStatement:"+preparedStatement);
 	    String returnrs="a";
 	    try{
