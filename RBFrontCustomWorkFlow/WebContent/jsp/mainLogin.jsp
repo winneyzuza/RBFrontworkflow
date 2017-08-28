@@ -43,8 +43,7 @@
 	  if(!Configuration.TYPE.equals("DEV")){		  
 		  try{
 			  System.out.println("usr/pass:"+user+":"+"hidden");
-			  //result = login.getLDAP(user, pass);//login.connectLAP(user, pass);
-			  result = true; //login.getLDAP(user, pass);//login.connectLAP(user, pass);
+			  result = login.getLDAP(user, pass);//login.connectLAP(user, pass);
 			  System.out.println("SuperUser:"+result);
 		  }catch(Exception e){
 			  e.printStackTrace();
@@ -62,11 +61,11 @@
 			  
 			  if("".equals(module)){
 				  result = false;
-				  session.setAttribute("loginFail","user เนเธกเนเธกเธตเธชเธดเธ—เธเธดเนเนเธเธฃเธฐเธเธ");
+				  session.setAttribute("loginFail","user ไม่มีสิทธิ์ในระบบ");
 			  }
 				   
 		  }else{
-			  session.setAttribute("loginFail","login เนเธกเนเธชเธณเน€เธฃเนเธ");
+			  session.setAttribute("loginFail","login ไม่สำเร็จ");
 		  }
 		  
 	  }else{
