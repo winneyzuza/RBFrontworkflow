@@ -155,7 +155,7 @@ public class UploadUserlist3  extends HttpServlet {
 				if(lineAll[j].indexOf("Branch")>-1){
 					j=1;
 				}
-				//for(int i=0;i<10;i++){
+				
 				boolean check = true;
 				
 				List<String> mapDummy = getDummyBranch(termList);
@@ -167,7 +167,6 @@ public class UploadUserlist3  extends HttpServlet {
 				    System.out.println("key, " + key + " value " + value);
 				}*/
 
-				//System.out.println("getDummyBranch " + dummy.size());
 				
 				String duplicate = hasDuplicates(termList, mapDummy);
 				System.out.println(" duplicate " + duplicate);
@@ -271,7 +270,7 @@ public class UploadUserlist3  extends HttpServlet {
 								      preparedStatement.setString(7, Reserved);
 								      
 								      preparedStatement.executeUpdate();							      
-								} System.out.println("preparedStatement3 " + preparedStatement);
+								} 
 							}// end if check
 							else{
 								 //count=1000;
@@ -281,10 +280,6 @@ public class UploadUserlist3  extends HttpServlet {
 						      
 						}// end for
 				}
-				
-				
-				
-				System.out.println("Count >> " + count);
 				
 				if(duplicate.length() > 0) {
 					 al.setStatus("E");
@@ -352,7 +347,6 @@ public class UploadUserlist3  extends HttpServlet {
 		
 		for(int i=0;i<lineAll.length;i++){
 			String line = lineAll[i];
-			System.out.println("line XXXX " + line);
 			
 			int s = 0;
 			int l = line.indexOf(",");
@@ -413,7 +407,7 @@ public class UploadUserlist3  extends HttpServlet {
 			String line = lineAll[i];
 			
 			if("".equals(line.trim())){
-				System.out.println("___"+line);
+				//System.out.println("___"+line);
 				continue;
 			}
 			
@@ -468,7 +462,7 @@ public class UploadUserlist3  extends HttpServlet {
 			preparedStatement = connect.prepareStatement("select * from IAM i ");
 			//System.out.println("iam:"+preparedStatement);
 			ResultSet resultSet = preparedStatement.executeQuery();
-			System.out.println("hr result:"+resultSet);
+			//System.out.println("hr result:"+resultSet);
 			int i =0;
 			int dup = 0;
 			Connection connectMy = DatbaseConnection.getConnectionMySQL();
@@ -514,20 +508,6 @@ public class UploadUserlist3  extends HttpServlet {
 		return flag;
 	}
 	
-	public boolean isBranchInfo(String orgCode, List<String> branchList) {
-		boolean isBranch = false;
-		
-		for(String branch : branchList) {
-			System.out.println("branch from branchList " + branch);
-			if(branch.equals(orgCode)) {
-				isBranch = true;
-				return isBranch;
-			}
-			
-		}
-		
-		return isBranch;
-	}
 	
 	public List<String> getDummyBranch(ArrayList<TerminalList> termLists){
 		 List<String> branchList = getBranchInfo();
@@ -690,37 +670,8 @@ public class UploadUserlist3  extends HttpServlet {
 		// TODO Auto-generated method stub
 		UploadUserlist3 test = new UploadUserlist3();
 		//test.startUploadUserlist3();
+	
 		
-		//test.getBranchInfo();
-		
-		/*
-		Map<String, ArrayList<String>> map = test.getInfoByFile("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
-		
-		
-		for (Entry<String, ArrayList<String>> ee : map.entrySet()) {
-		    String key = ee.getKey();
-		    ArrayList<String> values = ee.getValue();
-		    
-		    
-		    System.out.println("XXXX " + values.get(2) + "key " + key );
-		    // TODO: Do something.
-		}*/
-		
-		//TerminalList term = new 
-		
-		//ArrayList<String> data = test.getInfoByFiles("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
-		
-		//for (int i = 0; i < data.size(); i++) {
-		//	System.out.println("" + data.get(i));
-		//}
-		
-		
-		ArrayList<TerminalList> termList = test.getInfoByFiles("1,13001,RUNGROJ SITHIPRASONG,ABM,SUPERVISOR,0004C,ภ?");
-		for (int x=0; x<termList.size(); x++) {
-			
-			
-			 System.out.println("termList >> " + termList.get(x).getEmpID());
-		}
 	}
 
 }
