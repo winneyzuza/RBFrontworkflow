@@ -242,7 +242,8 @@ public class UploadUserlist3  extends HttpServlet {
 								System.out.println("preparedStatement2 " + preparedStatement2);
 								ResultSet resultSet2 = preparedStatement2.executeQuery();
 								
-								if(resultSet2.next()){
+								//System.out.println("TerminalID LEN >> " + TerminalID.length());
+								if(resultSet2.next() && TerminalID.length() > 0){
 									String sql = "UPDATE tblmt_terminallist SET EmpID=?,Name=?,TechnicalRole=?,BusinessRole=?,Reserved=? WHERE OrgCode= LPAD(?,4,'0') and TerminalID= ? ";
 									
 									  	preparedStatement = connect.prepareStatement(sql);
@@ -271,6 +272,7 @@ public class UploadUserlist3  extends HttpServlet {
 								      
 								      preparedStatement.executeUpdate();							      
 								} 
+								//System.out.println("preparedStatement3 >>>>>>>>>>  " + preparedStatement);
 							}// end if check
 							else{
 								 //count=1000;
