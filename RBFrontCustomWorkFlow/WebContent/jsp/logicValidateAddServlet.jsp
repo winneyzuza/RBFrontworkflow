@@ -38,12 +38,12 @@
 		value = request.getParameter("Value").trim();
 		action = request.getParameter("SelectAction");
 		active = request.getParameter("CheckBoxActive");
-		if(active.isEmpty() || active.trim()==null) { 
+		if(null == active ||active.isEmpty() || active.trim()==null) { 
 			active="N";
 		}
 		
 		System.out.println("data add validate:"+topic+":"+statement+":"+operation+":"+value+":"+action+":"+active);
-		out.println("data add validate:"+topic+":"+statement+":"+operation+":"+value+":"+action+":"+active);
+		//out.println("data add validate:"+topic+":"+statement+":"+operation+":"+value+":"+action+":"+active);
 		out.flush();
 		connect = DatbaseConnection.getConnectionMySQL();
 		String seq = ControlSequenceTable.getSeqValidate();
