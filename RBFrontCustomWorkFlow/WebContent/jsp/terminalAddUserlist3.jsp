@@ -75,7 +75,6 @@ if(check){
 				totalBytesRead += byteRead;
 			}
 			String file = new String(dataBytes,StandardCharsets.UTF_8);
-			//System.out.println(file);
 			if(file.indexOf("filename=\"\"")>0){
 				success = "ยังไม่ได้เลือก file สำหรับ  upload";
 				check = false;
@@ -104,8 +103,7 @@ if(check){
 				//file = file.substring(file.indexOf("StartTerminalInformation")+26,file.indexOf("EndTerminalInformation"));
 				file = file.substring(indexStart,indexEnd);
 				
-				
-			    
+				//System.out.println("file : "+file);
 				UploadUserlist3 u = new UploadUserlist3();
 				u.insertTerminal(file);
 				success = u.getSuccess();
@@ -116,130 +114,7 @@ if(check){
 			    al.setStatus("C");
 			    al.insertAuditLog();
 				//u.importHR();
-				
-				/*try{					  
-					  connect = DatbaseConnection.getConnectionMySQL();
-					  
-					  if(connect != null){
-						  System.out.println("Database Connected.");
-					  } else {
-						  System.out.println("Database Connect Failed.");
-					  }
-					  
-					  preparedStatement = connect.prepareStatement("delete from tblmt_terminallist_log ");
-					  preparedStatement.executeUpdate();
-					  System.out.println("delete log tblmt_terminallist_log success");
-					  
-					  preparedStatement = connect.prepareStatement("INSERT INTO tblmt_terminallist_log (SELECT * FROM tblmt_terminallist) ");
-					  preparedStatement.executeUpdate();
-					  System.out.println("insert log terminal success.");
-					  
-// 					  preparedStatement = connect.prepareStatement("delete from tblmt_terminallist ");
-// 					  preparedStatement.executeUpdate();
-// 					  System.out.println("delete from tblmt_terminallist success");
-					  
-						//System.out.println(file);
-						int s1 = 0;
-						int l1 = file.indexOf("\n",s1);
-						String lineAll[] = file.split("\n");
-						
-						//for(int i=0;i<10;i++){
-						for(int i=0;i<lineAll.length-1;i++){
-							count++;
-							String line = lineAll[i];
-							System.out.println(i+":"+line);
-							if("".equals(line.trim())){
-								System.out.println(line);
-								continue;
-							}
-							
-							int s = 0;
-							int l = line.indexOf(",");
-							String OrgCode = line.substring(s,l);
-
-							s=l+1; l=line.indexOf(",",s);
-							String EmpID = line.substring(s,l);
-
-							s=l+1;  l=line.indexOf(",",s);
-							String Name = line.substring(s,l);
-							
-							s=l+1;	l=line.indexOf(",",s);
-							String TechnicalRole = line.substring(s,l);
-							
-							s=l+1;	l=line.indexOf(",",s);
-							String BusinessRole = line.substring(s,l);
-							
-							s=l+1;	l=line.indexOf(",",s);
-							String TerminalID = line.substring(s,l);
-							
-							s=l+1;	l=line.indexOf(",",s);
-							String Reserved = line.substring(s,line.length());
-								
-							//System.out.println("<br>test="+OrgCode+":"+EmpID+":"+Name+":"+TechnicalRole+":"+BusinessRole+":"+TerminalID+":"+Reserved);
-							
-							////////////////////////////////////
-							preparedStatement2 = connect.prepareStatement("select t.OrgCode,t.TerminalID from tblmt_terminallist t where t.OrgCode = LPAD(?,4,'0') and t.TerminalID like ? ");
-							preparedStatement2.setString(1, OrgCode);
-							preparedStatement2.setString(2, TerminalID+"%");
-							//System.out.println(preparedStatement2);
-							ResultSet resultSet2 = preparedStatement2.executeQuery();
-							
-							if(resultSet2.next()){
-								String sql = "UPDATE tblmt_terminallist "+
-									"SET EmpID=?,Name=?,TechnicalRole=?,BusinessRole=?,Reserved=? "+
-									"WHERE OrgCode= LPAD(?,4,'0') and TerminalID= ? ";
-								
-								  	preparedStatement = connect.prepareStatement(sql);
-								    preparedStatement.setString(1, EmpID);
-								    preparedStatement.setString(2, Name);
-								    preparedStatement.setString(3, TechnicalRole);
-								    preparedStatement.setString(4, BusinessRole);
-								    preparedStatement.setString(5, Reserved);
-								    preparedStatement.setString(6, OrgCode);
-								    preparedStatement.setString(7, TerminalID);
-
-							      preparedStatement.executeUpdate();
-							      
-							}else{
-								  preparedStatement = connect.prepareStatement("insert into  tblmt_terminallist values ( ?, ?, ?, ?, ?, ?, ?)");
-							      preparedStatement.setString(1, OrgCode);
-							      preparedStatement.setString(2, EmpID);
-							      preparedStatement.setString(3, Name);
-							      preparedStatement.setString(4, TechnicalRole);
-							      preparedStatement.setString(5, BusinessRole);
-							      preparedStatement.setString(6, TerminalID);
-							      preparedStatement.setString(7, Reserved);
-							      
-							      preparedStatement.executeUpdate();							      
-							}						      
-						      
-						}
-						
-						if(count<300){
-							 success = "terminal สำหรับอัพเดดมีน้อยเกินไป rollback";
-							  
-							  preparedStatement = connect.prepareStatement("delete from tblmt_terminallist ");
-							  preparedStatement.executeUpdate();
-							  System.out.println("delete from tblmt_terminallist success");
-							  
-							  preparedStatement = connect.prepareStatement("INSERT INTO tblmt_terminallist (SELECT * FROM tblmt_terminallist_log) ");
-							  preparedStatement.executeUpdate();
-							  System.out.println("insert log terminal success.");
-				  
-						}else{
-							success = "อัพเดดข้อมูล terminal เรียบร้อย";
-						}
-						
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						System.out.println("error terminalAddFile:"+e.getMessage());
-						e.printStackTrace();
-						success = "format file column "+count+" ไม่ถูกต้อง";
-					} finally{
-						connect.close();
-					}
-					
-					*/
+	
 			}	
 		}
 }
