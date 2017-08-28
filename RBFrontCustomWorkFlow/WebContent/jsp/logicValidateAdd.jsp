@@ -12,6 +12,7 @@
 </head>
 <link rel="stylesheet" type="text/css" href="css/style.css" />
 
+
 <script type="text/javascript">
 
 	function doSubmit(cmd){
@@ -325,7 +326,7 @@ public String getCheckBox(String Y){
 				 <td width="10">&nbsp;</td>
 									<td align="left" ><input class="txt1" name="CheckBoxActive" type="checkbox"  value="Y" <%= getCheckBox(request.getParameter("CheckBoxActive")) %> /></td>										
 				 </tr>
-				 <tr><td colspan="3" align="center" ><input class="btn1" type="submit" name="Submit" value="Add" onClick="doSubmit('add')" /></td></tr>
+				 <tr><td colspan="3" align="center" ><input class="btn1" id="btnAdd" type="button" name="Submit" value="Add" onClick="doSubmit('add')" /></td></tr>
 		         </table>
          
          </form>  		 
