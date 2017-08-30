@@ -72,7 +72,6 @@ public class IAM {
 			preparedStatement = connect
 			          .prepareStatement("select * from IAM i where employeeID like ? ");
 			preparedStatement.setString(1, empID);
-//			System.out.println("iam:"+preparedStatement);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
 			if(resultSet.next()){
@@ -170,12 +169,10 @@ public class IAM {
 				tempE = resultSet.getString("manager");
 				rs	  = resultSet.getString("OC_CODE");
 			}
-		
 			while(!tempB.equals(oc_type)){
 				preparedStatement = connect
 						.prepareStatement("select manager,OC_TYPE,OC_CODE from IAM i where employeeID = ? ");		
 				preparedStatement.setString(1, tempE);
-//				System.out.println(oc_type+":"+tempB+preparedStatement);
 				resultSet = preparedStatement.executeQuery();
 				
 				if(resultSet.next()){
@@ -197,7 +194,7 @@ public class IAM {
 			} catch (SQLException e) {
 			}			
 		}
-		
+		System.out.println(" getOcType  OC_CODE " + rs);
 		return rs;
 	}
 	
@@ -210,7 +207,6 @@ public class IAM {
 			preparedStatement = connect
 			          .prepareStatement("select OC_CODE from IAM i where employeeID like ? ");
 			preparedStatement.setString(1, empID);
-//			System.out.println("iam:"+preparedStatement);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
 			if(resultSet.next()){
@@ -365,5 +361,9 @@ public class IAM {
 		}
 		
 		return Job_Title_TH;
+	}
+	
+	public static void main(String []args) {
+		getOcType("0001", "area");
 	}
 }

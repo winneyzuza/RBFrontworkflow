@@ -38,7 +38,7 @@ public class ProcessGroup {
 
 		flag = flag && checkGroupMain(fwGroup,rq.getEmpID(),rq.getFwdPosition()," For. Branch");
 		flag = flag && checkGroupMain(revGroup,rq.getEmpID(),rq.getRevPosition()," Rev. Branch");
-		
+
 		return flag;
 	}
 	
@@ -52,9 +52,10 @@ public class ProcessGroup {
 			          .prepareStatement("select DayBranch,Operation,Value,Action from tblmt_validation v where v.Validate = 'Group"+GroupB+"' and v.Active = 'Y' ");
 
 			ResultSet resultSet = preparedStatement.executeQuery();
-//			System.out.println(preparedStatement);
+			int i = 0;
 			while(resultSet.next()){
-
+				i++;
+				
 				String lvJob = resultSet.getString("DayBranch");
 				String Value = resultSet.getString("Value");
 				String Action = resultSet.getString("Action");
@@ -81,7 +82,7 @@ public class ProcessGroup {
 				}//end if corp3
 				
 				if("Corp2".equals(lvJob)){ //เงือนไขในใบคำสั่ง group3 corp2 lower
-					
+
 					int lvCorp = IAM.getlvCorpByEmp(empID);
 					int lvCorpStaff2 = getlvCorp("Staff 2");
 					boolean lowStaff2 = (lvCorp<=lvCorpStaff2);	// employee must lvCorp <= staff2	
@@ -99,9 +100,7 @@ public class ProcessGroup {
 					continue;
 				}//end if corp2
 				
-//				System.out.println("B"+getLvjobEmp(empID)+lvJob);
 				if("All".equals(lvJob) || Integer.parseInt(getLvjobEmp(empID)) > Integer.parseInt(lvJob) ){
-					
 					if(position.equals(Value)){
 						if(NormalFunction.checkApproverReject(Action)){
 							this.approver = NormalFunction.chooseApprover(this.approver,Action);

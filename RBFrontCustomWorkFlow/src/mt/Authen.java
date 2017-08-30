@@ -57,9 +57,7 @@ public class Authen {
 			preparedStatement.setString(1, userID);
 			ResultSet resultSet = preparedStatement.executeQuery();
 			
-//			System.out.println("preparedStatement: "+preparedStatement);
 			if( resultSet.next()){
-				System.out.println("requester is User in system ");
 				rs = true;
 			}else{
 				rs = false;
