@@ -132,7 +132,7 @@ public class RequestApprover {
 			flag = flag && setVerify(); System.out.println("setVerify() flag >> " + setVerify() + " flag " + flag);
 			
 			System.out.println("updateReqRepository");
-			flag = flag && updateReqRepository();
+			flag = flag && updateReqRepository(); System.out.println("updateReqRepository() flag >> " + updateReqRepository()+ " flag " + flag);
 			
 			
 			 RequestApproverRes rar = returnRequestApproverRes();
@@ -875,24 +875,44 @@ public class RequestApprover {
 		List<String> VerifyUserAO;// = new ArrayList<String>();
 		List<String> VerifyUserNO = new ArrayList<String>();
 		VerifyUserAO = setVerifyUserAO(rq.getEmpID());
-		if(VerifyUserAO.size()==0){
-			VerifyUserAO.add("NA");
-		}
 		VerifyUserNO = setVerifyUserNW(rq.getEmpID());
-		if(VerifyUserNO.size()==0){
-			VerifyUserNO.add("NA");
+		
+		String reqID = rq.getEmpID();
+		IAM requester = new IAM(reqID);
+		String typeRequester = requester.getOC_TYPE();
+		
+		
+		if("Y".equals(this.escalate)){
+			System.out.println("setVerify IS escalate");
+			if("Sub Branch".equals(typeRequester) || "Branch".equals(typeRequester)){
+				
+				VerifyUserAO.add(getManager(reqID,"Branch"));
+				
+			}else if("Area".equals(typeRequester)){
+				
+				VerifyUserAO.add(getManager(reqID,"Area"));
+			}
+		}else {
+			if(VerifyUserAO.size()==0){
+				VerifyUserAO.add("NA");
+			}
+			
+			if(VerifyUserNO.size()==0){
+				VerifyUserNO.add("NA");
+			}
 		}
 		rs.setVerifyUserAO(VerifyUserAO);
 		
 		rs.setVerifyUserNO(VerifyUserNO);
 		rs.setErrorMsg("");
 		
+		
 		return flag;
 	}
 	
 	public List<String> setVerifyUserAO(String empID){
 		List<String> temp = new ArrayList<String>();
-		temp.add("90045");
+		//temp.add("90045");
 		
 		String branchID = IAM.getOCByEmp(empID);
 		String AO		= IAM.getOcType(branchID,"Area");
@@ -928,6 +948,7 @@ public class RequestApprover {
 	
 	public List<String> setVerifyUserNW(String empID){
 		List<String> temp = new ArrayList<String>();
+		
 		//temp.add("90045");
 		
 		String branchID = IAM.getOCByEmp(empID);
@@ -1151,6 +1172,11 @@ public class RequestApprover {
 		}
 		
 		if("Y".equals(this.escalate)){
+			System.out.println("GO TO escalate >>>> \n");
+			System.out.println("GO TO escalate lvApprove " + lvApprove);
+			System.out.println("GO TO escalate typeRequester " + typeRequester);
+			System.out.println("GO TO escalateReqester " + Reqester + "\n");
+			
 			escalation(lvApprove,typeRequester,Reqester);
 		}
 		
@@ -1197,7 +1223,7 @@ public class RequestApprover {
 				
 			}
 		}
-		
+		rs.setEscalation("Y");
 		return true;
 	}
 	
