@@ -883,7 +883,6 @@ public class RequestApprover {
 		
 		
 		if("Y".equals(this.escalate)){
-			System.out.println("setVerify IS escalate");
 			if("Sub Branch".equals(typeRequester) || "Branch".equals(typeRequester)){
 				
 				VerifyUserAO.add(getManager(reqID,"Branch"));
@@ -1172,11 +1171,6 @@ public class RequestApprover {
 		}
 		
 		if("Y".equals(this.escalate)){
-			System.out.println("GO TO escalate >>>> \n");
-			System.out.println("GO TO escalate lvApprove " + lvApprove);
-			System.out.println("GO TO escalate typeRequester " + typeRequester);
-			System.out.println("GO TO escalateReqester " + Reqester + "\n");
-			
 			escalation(lvApprove,typeRequester,Reqester);
 		}
 		
