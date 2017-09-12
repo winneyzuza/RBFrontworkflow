@@ -19,15 +19,73 @@
 </head>
 
 <script type="text/javascript">
-
+	function isNumber(n) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
+	}
+	
+	function include(arr, obj) {
+	    for(var i=0; i<arr.length; i++) {
+	        if (arr[i] == obj) return true;
+	    }
+	}
+	
 	function doSubmit(cmd){
 		
 		var mainForm = document.getElementById("mainForm")
+		var validGroup = true;
+		var validNum = true;
+		var tempVal = "";
 		
 		if(confirm("ยืนยันทำรายการ")){			
 			if(cmd == 'update'){
-				mainForm.setAttribute("action","logicValidateUpdate.jsp");
-				mainForm.submit();
+				
+				
+				var count = document.getElementById("rows").value;
+				var countRName = document.getElementById("countRName").value;
+				
+				var arr = [];
+				
+				var a = new Array();
+				
+				for(k=1;k<=countRName;k++){
+					var rName = document.getElementById('RName'+k).value;
+					arr.push(rName);
+				}
+				
+				
+				for(i=1;i<=count;i++){
+					var type = document.getElementById('Validate'+i).value;
+					var val = document.getElementById('Value'+i).value;
+				
+					if(type.indexOf("Group")>-1){
+						
+						if(!include(arr, val)){
+							validGroup = false;
+							tempVal = val;
+							break;
+						}
+					}else {
+						if(!isNumber(val)){
+							validNum = false;
+							tempVal = val;
+							break;
+						}
+					} 
+				}
+				
+				if(!validGroup){
+					alert("ค่า value " + tempVal +" ไม่ถูกต้อง EX.(AT,CS,AT+CS,SC,SSC,...)");
+					return false;
+				}else if(!validNum){
+					alert("ค่า value " + tempVal +" ไม่ถูกต้อง input only positive number");
+					return false;
+				}else{
+					mainForm.setAttribute("action","logicValidateUpdate.jsp");
+					mainForm.submit();
+				}
+					
+				
+				
 			}else if(cmd.substring(0,6)=='remove'){
 				var i = cmd.substring(6)
 				document.getElementById("vRemove").value = document.getElementById("PKey"+i).value;
@@ -38,6 +96,7 @@
 		}
 		
 	}
+	
 </script>
 
 <%!
@@ -71,7 +130,7 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 			Statement = "Corp.ตั้งแต่ Staff2 ลงไป";
 		}else{
 			String Job = LvJob.getJobByLv(BranchDay);
-			Statement = "ตำแหน่่งสูงกว่า "+Job;
+			Statement = "ตำแหน่งสูงกว่า "+Job;
 		}
 		
 	}
@@ -103,6 +162,11 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 			 String sql = "select PKey,Validate,DayBranch,Operation,Value,Action,Active from tblmt_validation order by Validate,DayBranch ";
 			preparedStatement = connect.prepareStatement(sql);
 			ResultSet rs = preparedStatement.executeQuery();
+			
+			
+			String sqlRole = "select RoleName from tblmt_role order by RoleName ";
+			preparedStatement = connect.prepareStatement(sqlRole);
+			ResultSet rsRoleName = preparedStatement.executeQuery();	
 ///////////////////////////////////////////////////////////////////////////////////////////
 
 %>
@@ -134,6 +198,17 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 	    <!-- Main Content -->
 	    <div id="main_content">              
 						<form id="mainForm"  method="post" action="" >
+		
+						<% 
+							int j=0;
+							while(rsRoleName.next()){
+								j++;
+								String RName = rsRoleName.getString("RoleName");%>
+								  <input type="hidden" id="RName<%=j%>" value="<%=RName%>">
+							<%	
+							}
+						%><input type="hidden" id="countRName" value="<%=j%>">
+						
 						<% 								
 							if( session.getAttribute("success")!=null )
 								out.println(session.getAttribute("success"));
@@ -185,7 +260,7 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 								  %>
 								  <input type="hidden" id="PKey<%=i%>" name="PKey<%=i%>" value="<%=pkey%>">
 								  <tr>
-								  <td align="center" ><input size="10" align="left" class="txt1" style="background-color:#f3defc" name="Validate<%=i%>"  type="text" value="<%=rs.getString("Validate") %>" readonly /></td>
+								  <td align="center" ><input size="10" align="left" class="txt1" style="background-color:#f3defc" id="Validate<%=i%>" name="Validate<%=i%>"  type="text" value="<%=rs.getString("Validate") %>" readonly /></td>
 								  <td align="center" ><input size="45" align="center" class="txt1" style="background-color:#f3defc" name="statement<%=i%>"  type="text" value="<%=statement %>" readonly /></td>
 									<td>
 								    	<select class="txt1" name="SelectOper<%=i %>" size="1" >								    	
@@ -208,7 +283,7 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 								    	%>								
 						              	</select>
 								    </td>
-								    	<td align="center" ><input align="center" class="txt1" name="Value<%=i %>"  type="text" value="<%=rs.getString("Value") %>" /></td>
+								    	<td align="center" ><input align="center" class="txt1" id="Value<%=i %>"  name="Value<%=i %>"  type="text" value="<%=rs.getString("Value") %>" /></td>
 								    <td>
 								    	<select class="txt1" name="SelectAction<%=i %>" size="1" >
 						                	<option value="Reject" <%= getSelect(rs.getString("Action"),"Reject") %>>Reject</option>
@@ -223,8 +298,11 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 								    <td align="center" ><input class="txt1"  name="CheckBoxActive<%=i %>" type="checkbox" value="Y" <%= getCheckBox(rs.getString("active")) %> /></td>
 								    <td class="tbl_row1"  ><img src="imgs/delete_icon.png" style="border:0;" height="24" title="Delete" onClick="doSubmit('remove<%=i%>')" /></td>
 								    </tr>
+								    
 						<%
 								  }
+							  	  %><input type="hidden" id="rows" value="<%=i%>">
+						<%
 							}else{ ///////  read only
 								  
 							  	  while(rs.next() )
@@ -278,6 +356,6 @@ public String getStatement(String Validate,String BranchDay) throws SQLException
 </html>
 <script src="js/menu.js"></script>
 <script type="text/javascript">
-	var ac = document.getElementById("BusinessChange");
+	var ac = document.getElementById("BizLogic");
 	ac.setAttribute("class", "active");
 </script>
