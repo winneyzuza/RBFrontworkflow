@@ -126,7 +126,9 @@ public class RequestApprover {
 					
 			System.out.println("setApprover");
 			flag = flag && processApprover(); System.out.println("processApprover()  >> " + processApprover() + " flag " + flag);
-			msgError = "ไม่สามารถอนุมัติคำขอได้เนื่องจากผิดกฎในการระบุตัวผู้อนุมัติ (Cannot identify approver)";
+			
+			if(!flag)
+				msgError = "ไม่สามารถอนุมัติคำขอได้เนื่องจากผิดกฎในการระบุตัวผู้อนุมัติ (Cannot identify approver)";
 			
 			System.out.println("setVerifyAO NW");
 			flag = flag && setVerify(); System.out.println("setVerify() flag >> " + setVerify() + " flag " + flag);
