@@ -36,8 +36,8 @@ public class FormValidate {
 //	  private PreparedStatement preparedStatement = null;
 //	  private ResultSet resultSet = null;
 	  
-	  private FormValidateRes rs = new FormValidateRes();
-	  private FormValidateReq rq = new FormValidateReq();
+	  private FormValidateRes rs = null;
+	  private FormValidateReq rq = null;
 	  private String seq ="";
 	  private String statusReq="N";
 	  private String refNo ="";
@@ -62,7 +62,10 @@ public class FormValidate {
 	public FormValidateRes mainformValidate(@Context HttpServletRequest req) throws Exception{
 		
 		try{
+			rs = new FormValidateRes();
+			rq = new FormValidateReq();
 			
+			System.out.println("<><><><> *** START FormValidateRes *** <><><><> \n");
 			HashMap<String,String> data = new HashMap<String,String>();
 			data.put("EmpID", req.getParameter("EmpID").trim());
 			data.put("EmpJobTitle", req.getParameter("EmpJobTitle"));
@@ -130,7 +133,8 @@ public class FormValidate {
 				
 				System.out.println(flag+" check CA");
 				ProcessCA processCA = new ProcessCA();
-				flag = flag & processCA.checkCA(rq);
+				//flag = flag & processCA.checkCA(rq);
+				flag = flag & processCA.checkCA1(rq);
 				if(!flag){
 					msgError = msgError + processCA.getMsgError();			
 				}else{
@@ -161,13 +165,24 @@ public class FormValidate {
 				/////////// Appprover //////////
 				System.out.println(flag+" Approver validation start");
 				RequestApprover ra = new RequestApprover();
+				
+				System.out.println("<><><><> BEFORE MAIN <><><><> \n");
+				System.out.println("data.get(\"EmpID\") " + data.get("EmpID") + "\n");
+				System.out.println("this.refNo " + this.refNo +"\n");
+				System.out.println("rq.getEscalation() " + rq.getEscalation() +"\n");
+				
+				
 				flag = flag & ra.mainRequestApprover(data.get("EmpID"),this.refNo,rq.getEscalation());
 				
+				System.out.println("mainRequestApprover " + flag);
 				if(!flag){
 					msgError = msgError + ra.getMsgError();				
 				}
 				
 				if(!flag){
+					System.out.println("SET status !!! ");
+					System.out.println("rq.getRequestID() " + this.refNo + " status " + "R");
+					ReqRepository.setStatus(this.refNo, "R");
 					rs.setRefNo("ERR");
 					rs.setErrorMsg("ผลการตรวจสอบพบข้อผิดพลาด (ERROR):"+msgError);
 
