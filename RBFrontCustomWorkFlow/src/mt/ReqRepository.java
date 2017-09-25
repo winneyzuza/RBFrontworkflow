@@ -42,7 +42,30 @@ public class ReqRepository {
 	String  Code;	
 	String FwdDiff;
 	String RevDiff;
-	
+	int sort;
+	 
+	public int getSort() {
+		return sort;
+	}
+
+
+	public void setSort(int sort) {
+		this.sort = sort;
+	}
+
+	int position;
+	public ReqRepository(String requestID, String reqSubmitDate, String empID, String effStartDate, String effEndDate,
+			String fwdPosition) {
+		super();
+		RequestID = requestID;
+		ReqSubmitDate = reqSubmitDate;
+		EmpID = empID;
+		EffStartDate = effStartDate;
+		EffEndDate = effEndDate;
+		FwdPosition = fwdPosition;
+	}
+
+
 	public String getFwdDiff() {
 		return FwdDiff;
 	}
@@ -221,6 +244,16 @@ public class ReqRepository {
 
 	public String getFwdPosition() {
 		return FwdPosition;
+	}
+
+
+	public int getPosition() {
+		return position;
+	}
+
+
+	public void setPosition(int position) {
+		this.position = position;
 	}
 
 
